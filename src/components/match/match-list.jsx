@@ -3,7 +3,7 @@ import { SectionHeader } from '@/components/ui/section-header';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { cn } from '@/lib/utils';
 
-function MatchRow({ match, highlighted }) {
+export function MatchRow({ match, highlighted }) {
   const live = match.status === 'live';
   return (
     <Link

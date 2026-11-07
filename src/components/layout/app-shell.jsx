@@ -15,7 +15,8 @@ export function AppShell({ active, counts = {}, aside, asideWide = false, childr
         'grid min-h-screen grid-cols-[minmax(0,1fr)] pb-[calc(64px+48px+env(safe-area-inset-bottom))]',
         'md:grid-cols-[84px_minmax(0,1fr)] md:pb-8',
         'xl:pb-0',
-        asideWide ? 'xl:grid-cols-[240px_minmax(0,1fr)_400px]' : 'xl:grid-cols-[240px_minmax(0,1fr)_380px]',
+        !aside ? 'xl:grid-cols-[240px_minmax(0,1fr)]'
+          : asideWide ? 'xl:grid-cols-[240px_minmax(0,1fr)_400px]' : 'xl:grid-cols-[240px_minmax(0,1fr)_380px]',
       )}
     >
       <Sidebar active={active} counts={counts} />

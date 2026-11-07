@@ -1,6 +1,4 @@
-'use client';
-
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { SectionTabs } from '@/components/ui/section-tabs';
 import { SplitBar } from '@/components/ui/split-bar';
 import { Media } from '@/components/ui/media';
 import { cn } from '@/lib/utils';
@@ -61,29 +59,17 @@ function Lineups({ match }) {
   );
 }
 
-const TABS = [
-  { id: 'events', label: 'Jugadas' },
-  { id: 'stats', label: 'Estadísticas' },
-  { id: 'lineups', label: 'Alineación' },
-];
-
 export function MatchTabs({ match, defaultTab = 'events' }) {
+  const empty = <p className="text-muted-foreground">El partido aún no empieza.</p>;
   return (
-    <Tabs defaultValue={defaultTab} className="gap-4">
-      <TabsList aria-label="Detalle del partido" className="h-auto! w-full rounded-2xl bg-card p-1">
-        {TABS.map((t) => (
-          <TabsTrigger
-            key={t.id}
-            value={t.id}
-            className="min-h-10 rounded-lg text-md font-semibold text-subtle data-active:font-bold dark:data-active:border-transparent dark:data-active:bg-accent"
-          >
-            {t.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-      <TabsContent value="events"><Timeline events={match.events} /></TabsContent>
-      <TabsContent value="stats"><StatsList stats={match.stats} /></TabsContent>
-      <TabsContent value="lineups"><Lineups match={match} /></TabsContent>
-    </Tabs>
+    <SectionTabs
+      label="Detalle del partido"
+      defaultValue={defaultTab}
+      items={[
+        { value: 'events', label: 'Jugadas', content: match.events?.length ? <Timeline events={match.events} /> : empty },
+        { value: 'stats', label: 'Estadísticas', content: match.stats?.length ? <StatsList stats={match.stats} /> : empty },
+        { value: 'lineups', label: 'Alineación', content: <Lineups match={match} /> },
+      ]}
+    />
   );
 }

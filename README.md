@@ -33,7 +33,7 @@ Código en `src/lib/firebase/` (`auth.js`, `db.js`, `useUser.js`); pantalla de l
 
 Sin librerías extra a propósito: los datos de la API se piden con `fetch` nativo desde el servidor
 (route handlers / server components) usando la caché de Next (`revalidate`), así la API key nunca llega al navegador.
-Rutas: `/` (Inicio) y `/partido/atn-rco` (Partido en vivo).
+Rutas: `/` (Inicio), `/partidos`, `/ligas`, `/ligas/[id]`, `/mi-equipo`, `/partido/[id]` y `/entrar`.
 
 ## Estructura
 ```text
@@ -49,6 +49,7 @@ src/
     layout/           app-shell, sidebar, bottom-nav, top-bar
     match/            componentes de fútbol (featured-match, match-list, match-tabs, scoreboard…)
     pwa/              install-card, service-worker
+    league/           standings-table (tabla de posiciones y forma)
     auth/             login-form
   lib/
     api/matches.js    capa de datos (cámbiala por tu API)
