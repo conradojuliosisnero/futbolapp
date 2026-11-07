@@ -121,7 +121,7 @@ async function standingsOf(code) {
     }));
     return { groups, season: data.season };
   } catch (e) {
-    if (/ (403|404) /.test(String(e.message))) return { groups: [], season: null }; // copa sin tabla o fuera del plan
+    if (/ (403|404|429) /.test(String(e.message))) return { groups: [], season: null }; // sin tabla, fuera del plan o límite: se muestra sin ella
     throw e;
   }
 }
@@ -395,7 +395,7 @@ export async function getTeamPage(teamId) {
   const from = dayKey(Date.now() - 45 * DAY), to = dayKey(Date.now() + 45 * DAY);
   const [{ groups }, data, afPlayers] = await Promise.all([
     leagueComp ? standingsOf(leagueComp.code) : { groups: [] },
-    fd(`/teams/${id}/matches?dateFrom=${from}&dateTo=${to}`, { revalidate: 600 }),
+    fd(`/teams/${id}/matches?dateFrom=${from}&dateTo=${to}`, { revalidate: 600 }).catch(() => ({ matches: [] })),
     afSquadFor(info).catch(() => null),
   ]);
   const matches = (data.matches ?? []).map(toMatch);
