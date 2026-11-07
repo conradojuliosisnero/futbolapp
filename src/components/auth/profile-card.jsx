@@ -62,7 +62,7 @@ export function ProfileCard() {
     finally { setBusy(false); }
   }
 
-  if (!firebaseReady) return <><Guest text="La app está en modo de prueba. El login se activa al conectar Firebase." /><Links /></>;
+  if (!firebaseReady) return <><Guest text="El inicio de sesión no está disponible en este momento." /><Links /></>;
 
   if (user === undefined) {
     return (
@@ -76,7 +76,6 @@ export function ProfileCard() {
   if (!user) return <><Guest text="Entra para seguir equipos, votar en los partidos y recibir avisos." /><Links /></>;
 
   const initial = (user.displayName || user.email || '?')[0].toUpperCase();
-  const provider = user.providerData[0]?.providerId === 'google.com' ? 'Google' : 'Correo y contraseña';
 
   return (
     <>
@@ -88,7 +87,6 @@ export function ProfileCard() {
         <div className="flex min-w-0 flex-col gap-1">
           <h2 className="truncate text-lg font-extrabold">{user.displayName || 'Hincha'}</h2>
           <span className="flex items-center gap-1.5 truncate text-md text-muted-foreground"><Mail className="size-3.5" aria-hidden />{user.email}</span>
-          <span className="text-xs text-faint">Cuenta: {provider}</span>
         </div>
       </div>
 

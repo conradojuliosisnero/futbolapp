@@ -28,7 +28,7 @@ const KEY = 'futbolapp:notify';
 const MESSAGES = {
   'ios-install': 'En iPhone las notificaciones solo funcionan con la app instalada: toca Compartir → "Agregar a inicio" y ábrela desde el ícono.',
   unsupported: 'Este navegador no soporta notificaciones push.',
-  unconfigured: 'Faltan las claves VAPID en .env.local para activar el push.',
+  unconfigured: 'Las notificaciones push no están disponibles en este momento.',
   denied: 'Bloqueaste las notificaciones. Actívalas en los ajustes del navegador para este sitio.',
 };
 
