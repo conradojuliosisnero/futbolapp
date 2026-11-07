@@ -98,6 +98,14 @@ Breakpoints: `md` = 768px (tablet) y `xl` = 1200px (escritorio).
   (genéralas con `npx web-push generate-vapid-keys`). La privada nunca va al navegador.
 - **Para probar en el celular** hace falta HTTPS: un deploy de prueba o un túnel (`cloudflared`, `ngrok`).
 
+## Partido de prueba (animaciones)
+
+`npm run dev` y abre **http://localhost:3000/prueba**. Simula un partido en vivo sin usar las APIs:
+iniciar, medio tiempo, final, y botones para gol, amarilla, roja, cambio, VAR y penal fallado de cada equipo.
+El modo automático corre el reloj (1 minuto de juego = 1 s, 0,5 s o 0,2 s) y genera eventos al azar.
+Usa los mismos componentes que un partido real, así que toda animación nueva se ve aquí.
+En producción da 404 salvo que definas `ENABLE_TEST_MATCH=1`. Motor y pruebas: `src/components/test-match/`.
+
 ## PWA
 - `app/manifest.js` genera `/manifest.webmanifest`.
 - Agrega `public/icons/icon-192.png` e `icon-512.png`.

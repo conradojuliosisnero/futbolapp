@@ -3,13 +3,18 @@ import { TeamCrest } from '@/components/ui/team-crest';
 import { cn } from '@/lib/utils';
 
 function Side({ team, reverse }) {
-  return (
-    <Link href={`/equipo/${team.id}`} className={cn('flex items-center gap-3.5 text-[15px] font-bold transition-colors hover:text-primary', reverse && 'flex-row-reverse')}>
+  const cls = cn('flex items-center gap-3.5 text-[15px] font-bold transition-colors', reverse && 'flex-row-reverse');
+  const body = (
+    <>
       <span className="hidden md:inline-flex"><TeamCrest team={team} /></span>
       <span className="hidden text-xl font-extrabold md:inline">{team.name}</span>
       <span className="md:hidden">{team.code}</span>
-    </Link>
+    </>
   );
+  // Sin id real (partido de prueba) no hay página de equipo a la cual ir.
+  return team.id
+    ? <Link href={`/equipo/${team.id}`} className={cn(cls, 'hover:text-primary')}>{body}</Link>
+    : <span className={cls}>{body}</span>;
 }
 
 export function Scoreboard({ match }) {
