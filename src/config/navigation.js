@@ -4,7 +4,6 @@ import { CalendarDays } from '@/components/animate-ui/icons/calendar-days';
 import { Trophy } from '@/components/animate-ui/icons/trophy';
 import { Star } from '@/components/animate-ui/icons/star';
 import { Bell } from '@/components/animate-ui/icons/bell';
-import { UserRound } from '@/components/animate-ui/icons/user-round';
 import { Newspaper } from 'lucide-react';
 import { DEFAULT_TEAM, LEAGUES, leagueEmblem } from '@/config/leagues';
 
@@ -19,7 +18,6 @@ export const NAV_ITEMS = [
   { id: 'mi-equipo', label: 'Mi equipo', href: '/mi-equipo', icon: Star, mobile: true },
   { id: 'noticias', label: 'Noticias', href: '/noticias', icon: Newspaper, mobile: true },
   { id: 'notificaciones', label: 'Notificaciones', href: '/notificaciones', icon: Bell },
-  { id: 'perfil', label: 'Perfil', href: '/perfil', icon: UserRound },
 ];
 
 // shortcut: lo que sigue el usuario es fijo hasta tener login (luego sale de users/{uid}.follows).

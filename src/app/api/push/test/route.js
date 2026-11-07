@@ -16,7 +16,7 @@ function isValidSubscription(s) {
 }
 
 export async function POST(request) {
-  if (!pub || !priv) return Response.json({ error: 'Faltan las claves VAPID en el servidor.' }, { status: 503 });
+  if (!pub || !priv) return Response.json({ error: 'Las notificaciones push no están disponibles.' }, { status: 503 });
 
   const body = await request.json().catch(() => null);
   if (!isValidSubscription(body?.subscription)) return Response.json({ error: 'Suscripción inválida.' }, { status: 400 });

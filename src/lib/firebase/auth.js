@@ -42,23 +42,40 @@ export const signOut = () => fbSignOut(auth);
 // Firebase envía el correo con el enlace para crear una contraseña nueva.
 export const resetPassword = ({ email }) => sendPasswordResetEmail(auth, email);
 
-// Mensajes en español para los errores que ve el usuario.
+// Mensajes para el usuario: claros pero sin detalles internos (proveedor, configuración, códigos)
+// y sin revelar si un correo tiene cuenta (evita que alguien averigüe qué correos están registrados).
+const SAME = 'Correo o contraseña incorrectos.';
+const UNAVAILABLE = 'No pudimos iniciar sesión en este momento. Intenta más tarde.';
 const ERRORS = {
-  'auth/invalid-credential': 'Correo o contraseña incorrectos.',
-  'auth/email-already-in-use': 'Ese correo ya tiene una cuenta.',
+  'auth/invalid-credential': SAME,
+  'auth/invalid-login-credentials': SAME,
+  'auth/user-not-found': SAME,
+  'auth/wrong-password': SAME,
+  'auth/email-already-in-use': 'No pudimos crear la cuenta con ese correo. Si ya tienes una, entra o recupera tu contraseña.',
+  'auth/account-exists-with-different-credential': 'No pudimos entrar con ese método. Prueba con tu correo y contraseña.',
   'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
   'auth/invalid-email': 'El correo no es válido.',
-  'auth/too-many-requests': 'Demasiados intentos. Espera un momento.',
-  'auth/popup-closed-by-user': 'Cerraste la ventana de Google.',
-  'auth/user-not-found': 'No hay una cuenta con ese correo.',
   'auth/missing-email': 'Escribe tu correo.',
   'auth/missing-password': 'Escribe tu contraseña.',
-  'auth/operation-not-allowed': 'Este método de inicio de sesión no está activado en Firebase.',
-  'auth/unauthorized-domain': 'Este dominio no está autorizado en Firebase (Authentication > Configuración > Dominios autorizados).',
-  'auth/popup-blocked': 'El navegador bloqueó la ventana de Google. Permite ventanas emergentes e intenta de nuevo.',
-  'auth/cancelled-popup-request': 'Cerraste la ventana de Google.',
+  'auth/too-many-requests': 'Demasiados intentos. Espera un momento.',
+  'auth/popup-closed-by-user': 'Se cerró la ventana antes de terminar.',
+  'auth/cancelled-popup-request': 'Se cerró la ventana antes de terminar.',
+  'auth/popup-blocked': 'El navegador bloqueó la ventana. Permite ventanas emergentes e intenta de nuevo.',
   'auth/network-request-failed': 'Sin conexión. Revisa tu internet e intenta de nuevo.',
-  'auth/account-exists-with-different-credential': 'Ese correo ya está registrado con otro método. Entra con correo y contraseña.',
   'auth/user-disabled': 'Esta cuenta está desactivada.',
+  // Errores de configuración: al usuario solo un mensaje genérico; el detalle va a la consola.
+  'auth/operation-not-allowed': UNAVAILABLE,
+  'auth/unauthorized-domain': UNAVAILABLE,
+  'auth/invalid-api-key': UNAVAILABLE,
+  'auth/configuration-not-found': UNAVAILABLE,
 };
-export const authErrorMessage = (e) => ERRORS[e?.code] ?? 'No se pudo iniciar sesión. Intenta de nuevo.';
+export function authErrorMessage(e) {
+  if (e?.code) console.warn('Inicio de sesión:', e.code); // solo para depurar, no se muestra en pantalla
+  return ERRORS[e?.code] ?? 'No se pudo completar la acción. Intenta de nuevo.';
+}
+
+/** Recuperar contraseña: si el correo no existe se responde igual (no revela qué correos tienen cuenta). */
+export async function requestPasswordReset(form) {
+  try { await resetPassword(form); }
+  catch (e) { if (!['auth/user-not-found', 'auth/invalid-credential'].includes(e?.code)) throw e; }
+}

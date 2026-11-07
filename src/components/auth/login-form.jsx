@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail } from '@/components/animate-ui/icons/mail';
 import { Lock } from '@/components/animate-ui/icons/lock';
 import { UserRound } from '@/components/animate-ui/icons/user-round';
@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/ui/logo';
-import { signIn, signUp, signInWithGoogle, resetPassword, authErrorMessage } from '@/lib/firebase/auth';
+import { signIn, signUp, signInWithGoogle, requestPasswordReset, authErrorMessage } from '@/lib/firebase/auth';
 import { firebaseReady } from '@/lib/firebase/client';
 import { useUser } from '@/lib/firebase/useUser';
 import { cn, ENTER } from '@/lib/utils';
@@ -54,7 +54,8 @@ function GoogleIcon() {
 export function LoginForm({ redirectTo = '/' }) {
   const router = useRouter();
   const user = useUser();
-  const [mode, setMode] = useState('login'); // 'login' | 'register' | 'reset'
+  const params = useSearchParams();
+  const [mode, setMode] = useState(params.get('modo') === 'registro' ? 'register' : 'login'); // 'login' | 'register' | 'reset'
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
@@ -75,7 +76,7 @@ export function LoginForm({ redirectTo = '/' }) {
   function submit(e) {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.currentTarget));
-    if (mode === 'reset') return run(() => resetPassword(f), () => setNotice('Te enviamos un correo con el enlace para crear una nueva contraseña.'));
+    if (mode === 'reset') return run(() => requestPasswordReset(f), () => setNotice('Si ese correo tiene una cuenta, te llegará un enlace para crear una nueva contraseña.'));
     run(() => (mode === 'register' ? signUp(f) : signIn(f)));
   }
 
@@ -88,7 +89,7 @@ export function LoginForm({ redirectTo = '/' }) {
         <span className="grid size-12 place-items-center rounded-full bg-secondary text-primary"><KeyRound animate loop loopDelay={1500} className="size-5" aria-hidden /></span>
         <h1 className="text-[22px] font-black tracking-tight">Login no disponible todavía</h1>
         <p className="text-sm text-muted-foreground">
-          La app está en modo de prueba. El inicio de sesión se activa al agregar las credenciales de Firebase en <code>.env.local</code>.
+          El inicio de sesión no está disponible en este momento. Puedes seguir usando la app sin cuenta.
         </p>
         <Button asChild size="touch"><Link href="/">Volver al inicio</Link></Button>
       </div>

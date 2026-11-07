@@ -1,12 +1,15 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
+import { FreshData } from '@/components/layout/fresh-data';
 import { AutoRefresh } from '@/components/layout/auto-refresh';
 import { MatchClock } from '@/components/match/match-clock';
+import { LiveMoments } from '@/components/moments/live-moments';
+import { SoundToggle } from '@/components/moments/sound-toggle';
 import { Scoreboard } from '@/components/match/scoreboard';
 import { PredictionBar } from '@/components/match/prediction-bar';
 import { MatchTabs } from '@/components/match/match-tabs';
-import { getMatch, getLiveCount } from '@/lib/api/matches';
+import { getMatch, getLiveCount, getDataTime } from '@/lib/api/matches';
 import { siteConfig } from '@/config/site';
 
 export async function generateMetadata({ params }) {
@@ -24,9 +27,14 @@ export default async function MatchPage({ params }) {
 
   return (
     <AppShell active="en-vivo" counts={{ live: liveCount }} aside={<MatchTabs match={match} />} asideWide>
+      <FreshData fetchedAt={await getDataTime()} />
       <AutoRefresh enabled={match.status === 'live'} />
       <div className="flex flex-col gap-5">
-        <Link href={`/ligas/${match.leagueId}`} className="text-sm font-medium text-subtle">← {match.league}{match.round && ` · ${match.round}`}</Link>
+        <LiveMoments match={match} />
+        <div className="flex items-center justify-between gap-3">
+          <Link href={`/ligas/${match.leagueId}`} className="text-sm font-medium text-subtle">← {match.league}{match.round && ` · ${match.round}`}</Link>
+          {match.status !== 'finished' && <SoundToggle />}
+        </div>
         <MatchClock match={match} />
         <Scoreboard match={match} />
         {match.prediction && <PredictionBar match={match} />}

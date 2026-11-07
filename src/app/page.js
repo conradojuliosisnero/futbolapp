@@ -1,5 +1,6 @@
 import { CalendarDays } from '@/components/animate-ui/icons/calendar-days';
 import { AppShell } from '@/components/layout/app-shell';
+import { FreshData } from '@/components/layout/fresh-data';
 import { AutoRefresh } from '@/components/layout/auto-refresh';
 import { TopBar } from '@/components/layout/top-bar';
 import { FeaturedMatch } from '@/components/match/featured-match';
@@ -7,7 +8,7 @@ import { SectionHeader } from '@/components/ui/section-header';
 import { NewsList } from '@/components/news/news-list';
 import { MatchList } from '@/components/match/match-list';
 import { StatusScreen } from '@/components/ui/status-screen';
-import { getFeaturedMatch, getNews, getTodayByLeague, getLiveCount, todayLabel } from '@/lib/api/matches';
+import { getFeaturedMatch, getNews, getTodayByLeague, getLiveCount, todayLabel, getDataTime } from '@/lib/api/matches';
 
 export default async function HomePage() {
   const [featured, news, groups, liveCount] = await Promise.all([
@@ -22,6 +23,7 @@ export default async function HomePage() {
         ? <MatchList title="Partidos de hoy" date={todayLabel()} groups={groups} highlightId={featured?.id} />
         : <p className="text-muted-foreground">Hoy no hay partidos en tus ligas.</p>}
     >
+      <FreshData fetchedAt={await getDataTime()} />
       <AutoRefresh enabled={liveCount > 0} />
       <TopBar liveCount={liveCount} />
       <div className="flex flex-col gap-7">

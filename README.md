@@ -120,13 +120,35 @@ Breakpoints: `md` = 768px (tablet) y `xl` = 1200px (escritorio).
 
 ## Notificaciones
 
-- **Web y celular:** `/notificaciones` tiene la bandeja de avisos y los ajustes (qué avisos recibir).
-- **Push:** en el celular (y en Chrome de escritorio) se activan desde Ajustes. Usa Web Push estándar:
-  `public/sw.js` recibe el aviso y `app/api/push/test` envía uno de prueba.
-- **iPhone:** solo iOS 16.4+ y **con la app instalada** (Compartir → Agregar a inicio, abrir desde el ícono).
-- **Claves:** `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT` en `.env.local`
-  (genéralas con `npx web-push generate-vapid-keys`). La privada nunca va al navegador.
-- **Para probar en el celular** hace falta HTTPS: un deploy de prueba o un túnel (`cloudflared`, `ngrok`).
+- **Bandeja** (`/notificaciones`): los avisos de tu cuenta, en tiempo real (Firestore).
+- **Ajustes**: qué avisos quieres (goles, inicio, final, rojas, recordatorios, noticias de tu equipo) y activar push en el dispositivo.
+- **Mi equipo**: en la página de cualquier equipo toca **Hacer mi equipo**; de ese equipo llegan los avisos.
+- **iPhone:** push solo con iOS 16.4+ y la app instalada (Compartir → Agregar a inicio).
+
+### Avisos automáticos (goles, rojas, inicio, final y noticias de tu equipo)
+
+Cada ~5 min, GitHub Actions llama a `/api/cron/notify`, que revisa los partidos y noticias de los equipos elegidos,
+compara con lo ya avisado (`notifyState` en Firestore) y envía Web Push + guarda el aviso en la bandeja.
+Lógica probada en `src/lib/notify/engine.mjs`. Para activarlo:
+
+1. **Clave de servicio de Firebase:** Consola → Configuración del proyecto → Cuentas de servicio → *Generar nueva clave privada*.
+   Pega el JSON (en una línea, o en base64) en `FIREBASE_SERVICE_ACCOUNT` (en `.env` y en Vercel). **Es secreta: nunca la subas al repo.**
+2. **`CRON_SECRET`:** ya está en tu `.env.local`; cópiala a Vercel.
+3. **GitHub → Settings → Secrets and variables → Actions:** crea `APP_URL` (tu URL de Vercel) y `CRON_SECRET` (el mismo valor).
+4. Publica las reglas de Firestore (cambiaron): `npx firebase-tools deploy --only firestore:rules`.
+5. Prueba a mano: pestaña **Actions → Avisos automáticos → Run workflow**.
+
+GitHub puede retrasar las tareas programadas unos minutos; los avisos de gol llegan con hasta ~5–10 min de demora.
+
+## Animaciones de momentos clave
+
+Gol, gol de último minuto (desde el 88'), amarilla, roja, doble amarilla, VAR y final, a pantalla completa sobre la app.
+Usan **GSAP** y **anime.js**, que se descargan solo en el navegador. Respetan "reducir movimiento" (pasan a banner), vibran en el celular,
+tienen sonido (botón para silenciar) y se saltan con un toque.
+
+- `src/lib/moments/engine.js` — motor (sin React) · `map-event.mjs` — eventos de la app → momentos (probado).
+- `<MomentsProvider>` en `app/layout.js` · `<LiveMoments match={match} />` en la página del partido: anima cada evento **nuevo** que llega.
+- Pruébalas en `/prueba`: panel con cada animación (pantalla completa o banner) y el partido simulado que las dispara.
 
 ## Partido de prueba (animaciones)
 

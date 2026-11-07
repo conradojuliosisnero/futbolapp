@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
+import { FreshData } from '@/components/layout/fresh-data';
 import { AutoRefresh } from '@/components/layout/auto-refresh';
 import { TeamView } from '@/components/team/team-view';
-import { getTeamPage, getTeamNews, getLiveCount } from '@/lib/api/matches';
+import { getTeamPage, getTeamNews, getLiveCount, getDataTime } from '@/lib/api/matches';
 import { siteConfig } from '@/config/site';
 
 export async function generateMetadata({ params }) {
@@ -17,6 +18,7 @@ export default async function TeamPage({ params }) {
   if (!data) notFound();
   return (
     <AppShell active="ligas" counts={{ live: liveCount }}>
+      <FreshData fetchedAt={await getDataTime()} />
       <AutoRefresh enabled={data.live.length > 0} />
       <TeamView data={data} news={await getTeamNews(data.team.name, data.league?.id)} />
     </AppShell>

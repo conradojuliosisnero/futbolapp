@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
+import { FreshData } from '@/components/layout/fresh-data';
 import { SectionTabs } from '@/components/ui/section-tabs';
 import { StandingsTable } from '@/components/league/standings-table';
 import { ScorersTable } from '@/components/league/scorers-table';
 import { MatchRow } from '@/components/match/match-list';
-import { getLeague, getLiveCount } from '@/lib/api/matches';
+import { getLeague, getLiveCount, getDataTime } from '@/lib/api/matches';
 import { DEFAULT_TEAM } from '@/config/leagues';
 import { siteConfig } from '@/config/site';
 
@@ -37,6 +38,7 @@ export default async function LeaguePage({ params }) {
 
   return (
     <AppShell active="ligas" counts={{ live: liveCount }}>
+      <FreshData fetchedAt={await getDataTime()} />
       <div className="flex max-w-3xl flex-col gap-5">
         <Link href="/ligas" className="text-sm font-medium text-subtle">← Ligas</Link>
         <header className="flex items-center gap-4">
