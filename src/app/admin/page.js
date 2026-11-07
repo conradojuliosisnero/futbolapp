@@ -107,7 +107,7 @@ export default async function AdminPage() {
                   <th className="px-3 py-3 text-right font-semibold">7 d</th>
                   <th className="px-3 py-3 text-right font-semibold">14 d</th>
                   <th className="px-3 py-3 text-right font-semibold">Puntos</th>
-                  <th className="px-3 py-3 font-semibold">Última vez</th>
+                  <th className="px-3 py-3 font-semibold">Última petición</th>
                   <th className="px-3 py-3 font-semibold">Alta</th>
                 </tr>
               </thead>
@@ -123,7 +123,7 @@ export default async function AdminPage() {
                             : <span className="grid size-8 place-items-center rounded-full bg-secondary text-xs font-bold">{(u.name || u.email)[0]?.toUpperCase()}</span>}
                           <span className="flex min-w-0 flex-col">
                             <span className="truncate font-semibold">{u.name || '—'}</span>
-                            <span className="truncate text-xs text-muted-foreground">{u.email} · {u.provider}</span>
+                            <span className="truncate text-xs text-muted-foreground">{u.email}</span>
                           </span>
                         </summary>
                         <div className="mt-2 grid grid-cols-7 gap-1 text-center text-[11px]">

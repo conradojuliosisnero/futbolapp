@@ -1,10 +1,11 @@
 import 'server-only';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { getAuth } from 'firebase-admin/auth';
 
 // Firebase con permisos de servidor (salta las reglas de Firestore). Solo para tareas del servidor:
 // avisos, puntos, conteo de peticiones y panel de admin.
+// No se usa firebase-admin/auth: depende de jwks-rsa → jose (solo ESM) y en Vercel no carga
+// (ERR_REQUIRE_ESM). Los tokens se verifican con jose en server-session.js.
 // Clave: Consola de Firebase → Configuración del proyecto → Cuentas de servicio → "Generar nueva clave privada".
 // Va en FIREBASE_SERVICE_ACCOUNT como el JSON completo en una línea, o en base64.
 function credentials() {
@@ -19,18 +20,12 @@ function credentials() {
   }
 }
 
-function app() {
-  if (getApps().length) return getApps()[0];
-  const creds = credentials();
-  return creds ? initializeApp({ credential: cert(creds) }) : null;
-}
-
 /** Firestore de servidor, o null si falta la clave de servicio. */
 export function adminDb() {
-  return app() ? getFirestore() : null;
-}
-
-/** Auth de servidor (verificar sesiones, listar usuarios), o null si falta la clave de servicio. */
-export function adminAuth() {
-  return app() ? getAuth() : null;
+  if (!getApps().length) {
+    const creds = credentials();
+    if (!creds) return null;
+    initializeApp({ credential: cert(creds) });
+  }
+  return getFirestore();
 }
