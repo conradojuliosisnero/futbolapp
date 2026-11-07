@@ -1,0 +1,8 @@
+.chip {
+  flex: none; white-space: nowrap; min-height: 36px;
+  font-size: var(--pb-font-size-md); font-weight: var(--pb-font-weight-semibold);
+  padding: var(--pb-space-2) 14px; border-radius: var(--pb-radius-pill);
+  background: var(--pb-color-surface-2); color: var(--pb-color-text-control);
+}
+.chip:hover { color: var(--pb-color-text-primary); }
+.active, .active:hover { background: var(--pb-color-accent); color: var(--pb-color-accent-contrast); }

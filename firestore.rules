@@ -1,0 +1,51 @@
+rules_version = '2';
+
+// ESTRUCTURA
+//
+// users/{uid}                          perfil + lo que sigue (1 lectura al cargar la app)
+//   displayName: string
+//   email: string
+//   photoURL: string | null
+//   createdAt: timestamp
+//   follows: {
+//     teams:   { [apiTeamId]:   { name, crest } },
+//     leagues: { [apiLeagueId]: { name, crest } },
+//     matches: { [apiMatchId]:  { name, crest } },
+//   }
+//
+// predictions/{matchId}/votes/{uid}    un voto por usuario y partido
+//   pick: 'home' | 'draw' | 'away'
+//   at: timestamp
+//
+// Partidos, ligas, equipos y estadísticas NO se guardan aquí: vienen de la API de fútbol (caché de Next).
+// Las contraseñas NO se guardan aquí: las maneja Firebase Auth.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+
+    match /users/{uid} {
+      allow read, delete: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['displayName', 'email', 'photoURL', 'follows', 'createdAt'])
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.createdAt == request.time;
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL', 'follows'])
+        && request.resource.data.follows is map;
+    }
+
+    match /predictions/{matchId}/votes/{uid} {
+      // Lectura pública para que cualquiera vea los porcentajes (count queries).
+      allow read: if true;
+      // shortcut: no se valida que el partido no haya empezado (el partido vive en la API, no aquí); cuando importe, votar desde un route handler con firebase-admin.
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['pick', 'at'])
+        && request.resource.data.pick in ['home', 'draw', 'away']
+        && request.resource.data.at == request.time;
+      allow delete: if isOwner(uid);
+    }
+  }
+}

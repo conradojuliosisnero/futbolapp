@@ -1,0 +1,9 @@
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--pb-font-size-sm); font-weight: var(--pb-font-weight-bold);
+  background: var(--pb-color-live); color: var(--pb-color-live-contrast);
+  padding: 5px 10px; border-radius: var(--pb-radius-pill);
+}
+.dot, .dotPulse { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.dotPulse { animation: pulse var(--pb-duration-pulse) ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .3; } }

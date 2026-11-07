@@ -1,0 +1,2 @@
+.bar { display: flex; gap: 3px; border-radius: var(--pb-radius-pill); overflow: hidden; }
+.seg { min-width: 2px; }

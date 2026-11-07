@@ -1,0 +1,16 @@
+.board { display: flex; align-items: center; justify-content: space-between; }
+.side { display: flex; align-items: center; gap: 14px; font-size: var(--pb-font-size-lg); font-weight: var(--pb-font-weight-bold); }
+.reverse { flex-direction: row-reverse; }
+.crest, .name { display: none; }
+.center { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.score { font-size: var(--pb-font-size-score); font-weight: var(--pb-font-weight-black); line-height: var(--pb-line-height-none); }
+.clock { font-size: var(--pb-font-size-sm); font-weight: var(--pb-font-weight-semibold); color: var(--pb-color-accent); }
+
+@media (min-width: 768px) {
+  .board { background: var(--pb-color-surface-1); border-radius: 22px; padding: var(--pb-space-5) var(--pb-space-7); }
+  .crest { display: inline-flex; }
+  .name { display: inline; font-size: var(--pb-font-size-3xl); font-weight: var(--pb-font-weight-extrabold); }
+  .code { display: none; }
+  .score { font-size: 48px; }
+  .clock { font-size: var(--pb-font-size-md); }
+}

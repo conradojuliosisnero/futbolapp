@@ -1,0 +1,15 @@
+/* Reset + base. Los tokens (--pb-*) se inyectan desde src/theme/tokens.js */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--pb-color-bg);
+  color: var(--pb-color-text-primary);
+  font-family: var(--pb-font-family-sans);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+a:hover { color: var(--pb-color-accent); }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+img { max-width: 100%; display: block; }
+h1, h2, h3, p { margin: 0; }
+:focus-visible { outline: 2px solid var(--pb-color-accent); outline-offset: 2px; }

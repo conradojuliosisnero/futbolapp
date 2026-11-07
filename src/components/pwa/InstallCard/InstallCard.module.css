@@ -1,0 +1,3 @@
+.card { width: 100%; display: flex; flex-direction: column; gap: 10px; padding: var(--pb-space-4); border-radius: var(--pb-radius-xl); background: var(--pb-color-surface-1); }
+.title { font-size: var(--pb-font-size-base); }
+.text { font-size: var(--pb-font-size-md); line-height: var(--pb-line-height-snug); color: var(--pb-color-text-secondary); }

@@ -1,0 +1,3 @@
+.wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--pb-space-4); text-align: center; padding: var(--pb-space-6); }
+.title { font-size: var(--pb-font-size-score); font-weight: var(--pb-font-weight-black); }
+.text { color: var(--pb-color-text-secondary); }
