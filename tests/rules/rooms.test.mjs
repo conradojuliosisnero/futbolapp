@@ -112,6 +112,12 @@ test('chat: máximo 200 caracteres y no vacío', async () => {
   await assertFails(sendBatch(db('beto'), 'beto', 'l2', '   '));
 });
 
+test('antes de unirse, cada uno puede leer solo su propia ficha (aunque no exista)', async () => {
+  await seedRoom();
+  await assertSucceeds(getDoc(doc(db('beto'), 'rooms', ROOM, 'members', 'beto')));
+  await assertFails(getDoc(doc(db('beto'), 'rooms', ROOM, 'members', 'ana')));
+});
+
 test('quien no es miembro no lee ni escribe en el chat', async () => {
   await seedRoom({ members: { beto: {} } });
   await assertSucceeds(sendBatch(db('beto'), 'beto', 'm1'));

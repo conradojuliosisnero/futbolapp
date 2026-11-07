@@ -29,11 +29,11 @@ function useCooldown(lastMessageAt) {
   const [now, setNow] = useState(() => Date.now());
   const last = lastMessageAt?.toMillis?.() ?? 0;
   const left = Math.max(0, Math.ceil((last + MESSAGE_COOLDOWN_S * 1000 - now) / 1000));
+  // El reloj avanza siempre (1 vez por segundo): así la cuenta parte bien en 60 al enviar.
   useEffect(() => {
-    if (!left) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [left]);
+  }, []);
   return left;
 }
 

@@ -1,7 +1,7 @@
 // Firebase del lado del navegador. La config pública NO es secreta: la seguridad está en firestore.rules.
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 
 const config = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -19,4 +19,12 @@ export const firebaseReady = Boolean(config.apiKey);
 const app = firebaseReady ? (getApps()[0] ?? initializeApp(config)) : null;
 export const auth = app && getAuth(app);
 export const db = app && getFirestore(app);
+
+// Solo para pruebas de punta a punta: con NEXT_PUBLIC_FIREBASE_EMULATORS=1 la app usa los emuladores locales
+// (npm run test:e2e), nunca el proyecto real. En uso normal esta variable no existe.
+if (app && process.env.NEXT_PUBLIC_FIREBASE_EMULATORS === '1' && !globalThis.__minuto90Emulators) {
+  globalThis.__minuto90Emulators = true;
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+  connectFirestoreEmulator(db, '127.0.0.1', 8085);
+}
 export const googleProvider = new GoogleAuthProvider();

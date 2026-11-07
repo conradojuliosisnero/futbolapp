@@ -52,7 +52,12 @@ export function watchRoom(roomId, cb) {
 }
 /** cb(miembro | null) — mi ficha en la sala (si soy miembro). */
 export function watchMyMembership(roomId, uid, cb) {
-  return onSnapshot(doc(db, 'rooms', roomId, 'members', uid), (s) => cb(s.exists() ? s.data() : null), () => cb(null));
+  // Al unirse, Firestore muestra la ficha al instante (escritura local) antes de que el servidor la confirme.
+  // Se espera la confirmación: si el chat pidiera los mensajes antes, el servidor aún no lo consideraría miembro.
+  return onSnapshot(doc(db, 'rooms', roomId, 'members', uid), { includeMetadataChanges: true }, (s) => {
+    if (s.metadata.hasPendingWrites) return;
+    cb(s.exists() ? s.data() : null);
+  }, () => cb(null));
 }
 export function watchMembers(roomId, cb) {
   return onSnapshot(collection(db, 'rooms', roomId, 'members'), (s) => cb(s.docs.map((d) => ({ uid: d.id, ...d.data() }))), () => cb([]));

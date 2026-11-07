@@ -3,26 +3,43 @@ import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup,
   updateProfile, sendPasswordResetEmail, signOut as fbSignOut,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from './client';
 
+// Una sola creación por usuario: al registrarse, el formulario y la app (al detectar la sesión) la piden casi a la vez.
+const ensuring = new Map();
+
 // Crea users/{uid} la primera vez que entra (con email o con Google). También se usa si al entrar falta el documento.
-export async function ensureUserDoc(user) {
+export function ensureUserDoc(user) {
+  if (!ensuring.has(user.uid)) {
+    const job = createUserDoc(user).finally(() => setTimeout(() => ensuring.delete(user.uid), 5000));
+    ensuring.set(user.uid, job);
+  }
+  return ensuring.get(user.uid);
+}
+
+async function createUserDoc(user) {
   const ref = doc(db, 'users', user.uid);
   if ((await getDoc(ref)).exists()) return;
-  await setDoc(ref, {
-    displayName: user.displayName ?? '',
-    email: user.email,
-    photoURL: user.photoURL ?? null,
-    follows: { teams: {}, leagues: {}, matches: {} },
-    createdAt: serverTimestamp(),
-  });
+  try {
+    await setDoc(ref, {
+      displayName: user.displayName ?? '',
+      email: user.email,
+      photoURL: user.photoURL ?? null,
+      follows: { teams: {}, leagues: {}, matches: {} },
+      createdAt: serverTimestamp(),
+    });
+  } catch (e) {
+    // Si otra pestaña o dispositivo lo creó justo antes, ya está: no es un error.
+    if (!(await getDoc(ref)).exists()) throw e;
+  }
 }
 
 export async function signUp({ name, email, password }) {
   const { user } = await createUserWithEmailAndPassword(auth, email, password);
   await updateProfile(user, { displayName: name });
   await ensureUserDoc(user);
+  await updateDoc(doc(db, 'users', user.uid), { displayName: name }).catch(() => {}); // por si se creó antes de tener el nombre
   return user;
 }
 
