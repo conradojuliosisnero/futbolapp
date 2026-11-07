@@ -1,6 +1,6 @@
 import { siteConfig } from '@/config/site';
 
-/** variant: 'full' (pelibox.) | 'mark' (p.) */
+/** variant: 'full' (futbolapp.) | 'mark' (f.) */
 export function Logo({ variant = 'full' }) {
   const text = variant === 'mark' ? siteConfig.logoMark : siteConfig.name.toLowerCase();
   return (

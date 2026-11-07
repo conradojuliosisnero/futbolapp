@@ -11,7 +11,7 @@ export function Sidebar({ active, counts = {} }) {
   return (
     <nav
       aria-label="Principal"
-      className="sticky top-0 hidden h-screen flex-col items-center gap-7 border-r px-3 py-7 md:row-span-2 md:flex xl:row-span-1 xl:items-stretch xl:px-5"
+      className="no-scrollbar sticky top-0 hidden h-screen flex-col items-center gap-7 overflow-y-auto border-r px-3 py-7 md:row-span-2 md:flex xl:row-span-1 xl:items-stretch xl:px-5"
     >
       <Link href="/" className="hidden pl-2.5 xl:block"><Logo /></Link>
       <Link href="/" className="xl:hidden" aria-label="Inicio"><Logo variant="mark" /></Link>
@@ -32,7 +32,7 @@ export function Sidebar({ active, counts = {} }) {
                   on && 'bg-secondary text-primary xl:text-foreground',
                 )}
               >
-                <span aria-hidden className={cn('text-lg xl:w-4 xl:text-center xl:text-sm', on && 'xl:text-primary')}>{item.icon}</span>
+                <item.icon aria-hidden className={cn('size-5 shrink-0 xl:size-4', on && 'xl:text-primary')} />
                 <span className="hidden xl:inline">{item.label}</span>
                 {count ? <Badge variant="live" className="ml-auto hidden xl:inline-flex">{count}</Badge> : null}
               </Link>

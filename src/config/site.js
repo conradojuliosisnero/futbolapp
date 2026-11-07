@@ -1,7 +1,7 @@
 export const siteConfig = {
-  name: 'Pelibox',
-  shortName: 'Pelibox',
-  logoMark: 'p',
+  name: 'Futbolapp',
+  shortName: 'Futbolapp',
+  logoMark: 'f',
   tagline: 'Fútbol en vivo',
   description: 'Partidos en vivo, resultados y resúmenes.',
   locale: 'es',

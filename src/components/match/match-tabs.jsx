@@ -1,3 +1,4 @@
+import { Goal, ArrowLeftRight } from 'lucide-react';
 import { SectionTabs } from '@/components/ui/section-tabs';
 import { SplitBar } from '@/components/ui/split-bar';
 import { Media } from '@/components/ui/media';
@@ -15,6 +16,8 @@ function Timeline({ events = [] }) {
             <div className="flex min-w-0 flex-col gap-2">
               <div className={cn('flex items-center gap-2 font-semibold', hot ? 'text-base font-extrabold' : 'text-[15px]')}>
                 {card && <span className={cn('h-3.5 w-2.5 flex-none rounded-xs', e.type === 'yellow' ? 'bg-warning' : 'bg-live')} aria-hidden />}
+                {(e.type === 'goal' || e.type === 'goal-against') && <Goal aria-hidden className={cn('size-4 flex-none', hot ? 'text-primary' : 'text-subtle')} />}
+                {e.type === 'sub' && <ArrowLeftRight aria-hidden className="size-4 flex-none text-subtle" />}
                 {e.title}
               </div>
               {e.text && <p className="text-sm leading-snug text-muted-foreground">{e.text}</p>}

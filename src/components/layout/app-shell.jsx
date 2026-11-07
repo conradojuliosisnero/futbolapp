@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { Sidebar } from './sidebar';
 import { BottomNav } from './bottom-nav';
+import { MobileHeader } from './mobile-header';
 
 /**
  * Estructura responsive:
@@ -20,7 +21,10 @@ export function AppShell({ active, counts = {}, aside, asideWide = false, childr
       )}
     >
       <Sidebar active={active} counts={counts} />
-      <main className="min-w-0 px-5 pt-4 md:px-8 md:pt-7 xl:py-7">{children}</main>
+      <main className="min-w-0 px-5 pt-4 md:px-8 md:pt-7 xl:py-7">
+        <MobileHeader active={active} />
+        {children}
+      </main>
       {aside && (
         <aside className="min-w-0 px-5 pt-6 md:p-7 md:px-8 xl:sticky xl:top-0 xl:h-screen xl:overflow-y-auto xl:border-l xl:px-6">
           {aside}

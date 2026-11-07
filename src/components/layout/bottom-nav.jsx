@@ -17,7 +17,7 @@ export function BottomNav({ active }) {
             aria-current={on ? 'page' : undefined}
             className={cn('flex min-h-11 min-w-16 flex-col items-center justify-center gap-1 text-xs font-semibold', on ? 'text-primary' : 'text-subtle')}
           >
-            <span className={cn('size-1.5 rounded-full', on && 'bg-primary')} aria-hidden />
+            <item.icon aria-hidden className={cn('size-5', on && 'fill-primary/15')} />
             {item.label}
           </Link>
         );

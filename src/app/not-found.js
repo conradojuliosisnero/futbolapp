@@ -1,12 +1,16 @@
 import Link from 'next/link';
+import { SearchX } from 'lucide-react';
+import { AppShell } from '@/components/layout/app-shell';
 import { Button } from '@/components/ui/button';
+import { StatusScreen } from '@/components/ui/status-screen';
 
 export default function NotFound() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
-      <h1 className="text-score font-black">Fuera de juego</h1>
-      <p className="text-muted-foreground">No encontramos esa página.</p>
-      <Button asChild size="touch"><Link href="/">Volver al inicio</Link></Button>
-    </main>
+    <AppShell>
+      <StatusScreen icon={SearchX} code="404" title="Fuera de juego" text="Esta página no existe o el partido ya no está disponible.">
+        <Button asChild size="touch"><Link href="/">Volver al inicio</Link></Button>
+        <Button asChild size="touch" variant="outline"><Link href="/partidos">Ver partidos</Link></Button>
+      </StatusScreen>
+    </AppShell>
   );
 }

@@ -1,7 +1,7 @@
 // Registro / inicio de sesión. Las contraseñas las guarda Firebase Auth, nunca Firestore.
 import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup,
-  updateProfile, signOut as fbSignOut,
+  updateProfile, sendPasswordResetEmail, signOut as fbSignOut,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from './client';
@@ -39,6 +39,9 @@ export async function signInWithGoogle() {
 
 export const signOut = () => fbSignOut(auth);
 
+// Firebase envía el correo con el enlace para crear una contraseña nueva.
+export const resetPassword = ({ email }) => sendPasswordResetEmail(auth, email);
+
 // Mensajes en español para los errores que ve el usuario.
 const ERRORS = {
   'auth/invalid-credential': 'Correo o contraseña incorrectos.',
@@ -47,5 +50,7 @@ const ERRORS = {
   'auth/invalid-email': 'El correo no es válido.',
   'auth/too-many-requests': 'Demasiados intentos. Espera un momento.',
   'auth/popup-closed-by-user': 'Cerraste la ventana de Google.',
+  'auth/user-not-found': 'No hay una cuenta con ese correo.',
+  'auth/missing-email': 'Escribe tu correo.',
 };
 export const authErrorMessage = (e) => ERRORS[e?.code] ?? 'No se pudo iniciar sesión. Intenta de nuevo.';

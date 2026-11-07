@@ -1,4 +1,4 @@
-# Pelibox — PWA de fútbol
+# Futbolapp — PWA de fútbol
 
 Next.js 16 (App Router) · React 19 · JavaScript (sin TypeScript) · Tailwind CSS v4 · shadcn/ui · Animate UI.
 Interfaz "Estadio nocturno", responsive móvil / tablet / escritorio.
@@ -33,7 +33,8 @@ Código en `src/lib/firebase/` (`auth.js`, `db.js`, `useUser.js`); pantalla de l
 
 Sin librerías extra a propósito: los datos de la API se piden con `fetch` nativo desde el servidor
 (route handlers / server components) usando la caché de Next (`revalidate`), así la API key nunca llega al navegador.
-Rutas: `/` (Inicio), `/partidos`, `/ligas`, `/ligas/[id]`, `/mi-equipo`, `/partido/[id]` y `/entrar`.
+Rutas: `/` (Inicio), `/partidos`, `/ligas`, `/ligas/[id]`, `/mi-equipo`, `/partido/[id]`, `/notificaciones`, `/perfil` y `/entrar`.
+Pantallas de estado: `app/loading.js` (skeleton), `app/error.js`, `app/global-error.js` y `app/not-found.js` (404).
 
 ## Estructura
 ```text
@@ -50,11 +51,13 @@ src/
     match/            componentes de fútbol (featured-match, match-list, match-tabs, scoreboard…)
     pwa/              install-card, service-worker
     league/           standings-table (tabla de posiciones y forma)
-    auth/             login-form
+    auth/             login-form (entrar, registro, recuperar contraseña), profile-card (perfil y cerrar sesión)
+    notifications/    bandeja de avisos y ajustes (push + preferencias)
   lib/
     api/matches.js    capa de datos (cámbiala por tu API)
     firebase/         auth, Firestore, useUser
     mocks/            datos de ejemplo
+    push.js           Web Push en el navegador (suscribir, probar, desactivar)
     utils.js          cn() para unir clases
 public/sw.js          service worker (red primero, cache de respaldo)
 ```
@@ -81,6 +84,16 @@ La app es solo oscura (`<html class="dark">`). Colores principales en `globals.c
 Para cambiar la marca: edita `--primary` en `globals.css`, la fuente en `fonts.js` y el nombre en `config/site.js`.
 
 Breakpoints: `md` = 768px (tablet) y `xl` = 1200px (escritorio).
+
+## Notificaciones
+
+- **Web y celular:** `/notificaciones` tiene la bandeja de avisos y los ajustes (qué avisos recibir).
+- **Push:** en el celular (y en Chrome de escritorio) se activan desde Ajustes. Usa Web Push estándar:
+  `public/sw.js` recibe el aviso y `app/api/push/test` envía uno de prueba.
+- **iPhone:** solo iOS 16.4+ y **con la app instalada** (Compartir → Agregar a inicio, abrir desde el ícono).
+- **Claves:** `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` y `VAPID_SUBJECT` en `.env.local`
+  (genéralas con `npx web-push generate-vapid-keys`). La privada nunca va al navegador.
+- **Para probar en el celular** hace falta HTTPS: un deploy de prueba o un túnel (`cloudflared`, `ngrok`).
 
 ## PWA
 - `app/manifest.js` genera `/manifest.webmanifest`.

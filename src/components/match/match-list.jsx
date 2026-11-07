@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { BellPlus } from 'lucide-react';
 import { SectionHeader } from '@/components/ui/section-header';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { cn } from '@/lib/utils';
@@ -20,7 +21,7 @@ export function MatchRow({ match, highlighted }) {
       </span>
       {match.score
         ? <span className="flex flex-col gap-1 text-right text-sm font-extrabold"><span>{match.score[0]}</span><span>{match.score[1]}</span></span>
-        : <span className="text-xs font-semibold text-primary">Recordar</span>}
+        : <span className="flex items-center gap-1 text-xs font-semibold text-primary"><BellPlus className="size-3.5" aria-hidden />Recordar</span>}
     </Link>
   );
 }
