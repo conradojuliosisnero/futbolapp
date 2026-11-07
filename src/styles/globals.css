@@ -1,15 +1,121 @@
-/* Reset + base. Los tokens (--pb-*) se inyectan desde src/theme/tokens.js */
-*, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; }
-body {
-  background: var(--pb-color-bg);
-  color: var(--pb-color-text-primary);
-  font-family: var(--pb-font-family-sans);
-  -webkit-font-smoothing: antialiased;
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Tema "Estadio nocturno". La app es solo oscura: <html class="dark">.
+ * Cambiar la marca = cambiar --primary (verde lima) y la fuente en src/theme/fonts.js.
+ */
+:root {
+  --radius: 0.75rem;
+
+  /* shadcn */
+  --background: #0c0d0c;
+  --foreground: #f1f2ee;
+  --card: #151714;
+  --card-foreground: #f1f2ee;
+  --popover: #151714;
+  --popover-foreground: #f1f2ee;
+  --primary: #c6f432;
+  --primary-foreground: #0c0d0c;
+  --secondary: #1a1c19;
+  --secondary-foreground: #f1f2ee;
+  --muted: #1a1c19;
+  --muted-foreground: #9a9d93;
+  --accent: #2a2d27;
+  --accent-foreground: #f1f2ee;
+  --destructive: #e8332b;
+  --border: #1f221d;
+  --input: #262922;
+  --ring: #c6f432;
+
+  /* propios de la app */
+  --live: #e8332b;
+  --live-foreground: #ffffff;
+  --warning: #f2c230;
+  --subtle: #8a8d84;
+  --faint: #6f7369;
+  --control: #b9bbb4;
+  --neutral-1: #3a3f35;
+  --neutral-2: #5b5f56;
+  --glass: rgba(30, 32, 28, 0.92);
+  --scrim: rgba(255, 255, 255, 0.12);
+  --shade: rgba(0, 0, 0, 0.6);
+  --overlay: rgba(12, 13, 12, 0.95);
+  --placeholder-a: #1c1f1a;
+  --placeholder-b: #191b17;
 }
-a { color: inherit; text-decoration: none; }
-a:hover { color: var(--pb-color-accent); }
-button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
-img { max-width: 100%; display: block; }
-h1, h2, h3, p { margin: 0; }
-:focus-visible { outline: 2px solid var(--pb-color-accent); outline-offset: 2px; }
+
+@theme inline {
+  --font-sans: var(--font-archivo), Helvetica, Arial, sans-serif;
+  --font-heading: var(--font-archivo), Helvetica, Arial, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --breakpoint-xl: 75rem; /* 1200px: escritorio */
+
+  --text-2xs: 10px;
+  --text-md: 13px;
+  --text-score: 40px;
+  --text-score-lg: 52px;
+  --text-display: 72px;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-live: var(--live);
+  --color-live-foreground: var(--live-foreground);
+  --color-warning: var(--warning);
+  --color-subtle: var(--subtle);
+  --color-faint: var(--faint);
+  --color-control: var(--control);
+  --color-neutral-1: var(--neutral-1);
+  --color-neutral-2: var(--neutral-2);
+  --color-glass: var(--glass);
+  --color-scrim: var(--scrim);
+  --color-shade: var(--shade);
+  --color-overlay: var(--overlay);
+  --color-placeholder-a: var(--placeholder-a);
+  --color-placeholder-b: var(--placeholder-b);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  --animate-pulse-live: pulse-live 1.4s ease-in-out infinite;
+  @keyframes pulse-live { 50% { opacity: 0.3; } }
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  html { @apply font-sans antialiased; }
+  body { @apply bg-background text-foreground; }
+  a:hover { @apply text-primary; }
+  button:not(:disabled), [role="button"]:not(:disabled) { cursor: pointer; }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}

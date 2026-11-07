@@ -1,5 +1,12 @@
-import { EmptyState } from '@/components/ui';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default function NotFound() {
-  return <EmptyState title="Fuera de juego" text="No encontramos esa página." action={{ href: '/', label: 'Volver al inicio' }} />;
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
+      <h1 className="text-score font-black">Fuera de juego</h1>
+      <p className="text-muted-foreground">No encontramos esa página.</p>
+      <Button asChild size="touch"><Link href="/">Volver al inicio</Link></Button>
+    </main>
+  );
 }

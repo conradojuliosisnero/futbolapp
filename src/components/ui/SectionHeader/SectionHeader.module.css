@@ -1,3 +1,0 @@
-.header { display: flex; justify-content: space-between; align-items: baseline; gap: var(--pb-space-3); }
-.title { font-size: var(--pb-font-size-3xl); font-weight: var(--pb-font-weight-extrabold); }
-.meta { font-size: var(--pb-font-size-md); font-weight: var(--pb-font-weight-medium); color: var(--pb-color-text-tertiary); }

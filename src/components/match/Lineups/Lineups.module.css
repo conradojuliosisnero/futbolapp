@@ -1,5 +1,0 @@
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--pb-space-4); }
-.column { display: flex; flex-direction: column; gap: 10px; }
-.team { font-size: var(--pb-font-size-base); font-weight: var(--pb-font-weight-extrabold); }
-.players { margin: 0; padding-left: var(--pb-space-5); display: flex; flex-direction: column; gap: var(--pb-space-2); font-size: var(--pb-font-size-base); color: var(--pb-color-text-secondary); }
-.empty { color: var(--pb-color-text-secondary); }

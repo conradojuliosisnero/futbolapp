@@ -1,7 +1,6 @@
 import { fontSans, fontMono } from '@/theme/fonts';
-import { buildCssVariables } from '@/theme';
 import { siteConfig } from '@/config/site';
-import { ServiceWorker } from '@/components/pwa';
+import { ServiceWorker } from '@/components/pwa/service-worker';
 import '@/styles/globals.css';
 
 export const metadata = {
@@ -19,10 +18,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang={siteConfig.locale} className={`${fontSans.variable} ${fontMono.variable}`}>
-      <head>
-        <style id="pb-tokens" dangerouslySetInnerHTML={{ __html: buildCssVariables() }} />
-      </head>
+    <html lang={siteConfig.locale} className={`dark ${fontSans.variable} ${fontMono.variable}`}>
       <body>
         {children}
         <ServiceWorker />

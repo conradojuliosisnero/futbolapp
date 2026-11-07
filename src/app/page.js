@@ -1,6 +1,8 @@
-import { AppShell, TopBar } from '@/components/layout';
-import { FeaturedMatch, HighlightsGrid, MatchList } from '@/components/match';
-import { Stack } from '@/components/ui';
+import { AppShell } from '@/components/layout/app-shell';
+import { TopBar } from '@/components/layout/top-bar';
+import { FeaturedMatch } from '@/components/match/featured-match';
+import { HighlightsGrid } from '@/components/match/highlights-grid';
+import { MatchList } from '@/components/match/match-list';
 import { getFeaturedMatch, getHighlights, getTodayByLeague, getLiveCount } from '@/lib/api/matches';
 
 export default async function HomePage() {
@@ -15,10 +17,10 @@ export default async function HomePage() {
       aside={<MatchList title="Partidos de hoy" date="Vie 6 nov" groups={groups} highlightId={featured.id} />}
     >
       <TopBar liveCount={liveCount} />
-      <Stack gap={7}>
+      <div className="flex flex-col gap-7">
         <FeaturedMatch match={featured} />
         <HighlightsGrid title="Resúmenes y goles" items={highlights} />
-      </Stack>
+      </div>
     </AppShell>
   );
 }

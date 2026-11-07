@@ -1,6 +1,0 @@
-.card { display: flex; flex-direction: column; gap: 10px; padding: var(--pb-space-4) var(--pb-space-5); border-radius: var(--pb-radius-2xl); background: var(--pb-color-surface-1); }
-.head { display: flex; justify-content: space-between; font-size: var(--pb-font-size-md); font-weight: var(--pb-font-weight-semibold); color: var(--pb-color-text-secondary); }
-.options { display: flex; justify-content: space-between; font-size: var(--pb-font-size-md); font-weight: var(--pb-font-weight-bold); }
-.options button { min-height: 32px; }
-.muted { color: var(--pb-color-text-tertiary); }
-.voted { color: var(--pb-color-accent); text-decoration: underline; text-underline-offset: 4px; }

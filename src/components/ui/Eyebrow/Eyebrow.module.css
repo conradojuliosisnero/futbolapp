@@ -1,6 +1,0 @@
-.eyebrow {
-  font-size: var(--pb-font-size-sm); font-weight: var(--pb-font-weight-semibold);
-  letter-spacing: var(--pb-letter-spacing-wider); text-transform: uppercase;
-}
-.muted { color: var(--pb-color-text-muted); }
-.accent { color: var(--pb-color-accent); letter-spacing: var(--pb-letter-spacing-wide); }

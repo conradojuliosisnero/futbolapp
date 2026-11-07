@@ -1,8 +1,0 @@
-.card { display: flex; flex-direction: column; gap: 10px; scroll-snap-align: start; }
-.thumb { position: relative; height: 132px; }
-.duration {
-  position: absolute; right: 10px; bottom: 10px;
-  font-size: var(--pb-font-size-xs); font-weight: var(--pb-font-weight-semibold);
-  background: var(--pb-color-shade); padding: 3px 7px; border-radius: var(--pb-radius-sm);
-}
-.title { font-size: var(--pb-font-size-lg); font-weight: var(--pb-font-weight-bold); }

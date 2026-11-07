@@ -1,7 +1,0 @@
-.tabs { display: flex; background: var(--pb-color-surface-1); border-radius: var(--pb-radius-lg); padding: var(--pb-space-1); }
-.tab {
-  flex: 1; min-height: 40px; border-radius: var(--pb-radius-md);
-  font-size: var(--pb-font-size-md); font-weight: var(--pb-font-weight-semibold);
-  color: var(--pb-color-text-tertiary);
-}
-.active { background: var(--pb-color-surface-3); color: var(--pb-color-text-primary); font-weight: var(--pb-font-weight-bold); }

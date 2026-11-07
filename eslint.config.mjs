@@ -1,6 +1,7 @@
 import nextVitals from 'eslint-config-next/core-web-vitals';
 
-export default [
+const config = [
   ...nextVitals,
-  { ignores: ['.next/**', 'node_modules/**', 'out/**'] },
+  { ignores: ['.next/**', 'node_modules/**', 'out/**', 'graphify-out/**'] },
 ];
+export default config;

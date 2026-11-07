@@ -1,5 +1,0 @@
-.badge {
-  font-size: var(--pb-font-size-sm); font-weight: var(--pb-font-weight-bold);
-  background: var(--pb-color-live); color: var(--pb-color-live-contrast);
-  padding: 2px var(--pb-space-2); border-radius: var(--pb-radius-pill);
-}

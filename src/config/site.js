@@ -1,5 +1,3 @@
-import { color } from '@/theme/tokens';
-
 export const siteConfig = {
   name: 'Pelibox',
   shortName: 'Pelibox',
@@ -7,6 +5,7 @@ export const siteConfig = {
   tagline: 'Fútbol en vivo',
   description: 'Partidos en vivo, resultados y resúmenes.',
   locale: 'es',
-  themeColor: color.bg,
-  backgroundColor: color.bg,
+  // Igual que --background en globals.css
+  themeColor: '#0c0d0c',
+  backgroundColor: '#0c0d0c',
 };
