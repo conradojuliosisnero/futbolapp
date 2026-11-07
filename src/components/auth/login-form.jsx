@@ -55,6 +55,10 @@ export function LoginForm({ redirectTo = '/' }) {
   const router = useRouter();
   const user = useUser();
   const params = useSearchParams();
+  const next = params.get('siguiente');
+  // Solo rutas internas: "//sitio" o "/\sitio" los navegadores los tratan como otro dominio.
+  const internal = typeof next === 'string' && next.startsWith('/') && next[1] !== '/' && next[1] !== '\\';
+  const target = internal ? next : redirectTo;
   const [mode, setMode] = useState(params.get('modo') === 'registro' ? 'register' : 'login'); // 'login' | 'register' | 'reset'
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -62,11 +66,11 @@ export function LoginForm({ redirectTo = '/' }) {
   const [showPassword, setShowPassword] = useState(false);
 
   // Si ya tiene sesión, no tiene sentido mostrar el login.
-  useEffect(() => { if (user) router.replace('/perfil'); }, [user, router]);
+  useEffect(() => { if (user) router.replace(next ? target : '/perfil'); }, [user, router, next, target]);
 
   const go = (next) => { setMode(next); setError(''); setNotice(''); };
 
-  async function run(action, after = () => router.push(redirectTo)) {
+  async function run(action, after = () => router.push(target)) {
     setError(''); setNotice(''); setBusy(true);
     try { await action(); after(); }
     catch (e) { setError(authErrorMessage(e)); }

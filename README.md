@@ -63,7 +63,7 @@ Las consultas se hacen en el servidor y su caché la comparten todos los usuario
 
 Sin librerías extra a propósito: los datos de la API se piden con `fetch` nativo desde el servidor
 (route handlers / server components) usando la caché de Next (`revalidate`), así la API key nunca llega al navegador.
-Rutas: `/` (Inicio), `/favoritos`, `/partidos`, `/partido/[id]`, `/ligas`, `/ligas/[id]`, `/equipo/[id]`, `/jugador/[id]`, `/mi-equipo`, `/noticias`, `/buscar`, `/notificaciones`, `/perfil`, `/entrar` y `/prueba` (solo desarrollo).
+Rutas: `/` (Inicio), `/favoritos`, `/partido/[id]/sala/[sala]`, `/partidos`, `/partido/[id]`, `/ligas`, `/ligas/[id]`, `/equipo/[id]`, `/jugador/[id]`, `/mi-equipo`, `/noticias`, `/buscar`, `/notificaciones`, `/perfil`, `/entrar` y `/prueba` (solo desarrollo).
 Pantallas de estado: `app/loading.js` (skeleton), `app/error.js`, `app/global-error.js` y `app/not-found.js` (404).
 
 ## Estructura
@@ -140,6 +140,17 @@ Lógica probada en `src/lib/notify/engine.mjs`. Para activarlo:
 5. Prueba a mano: pestaña **Actions → Avisos automáticos → Run workflow**.
 
 GitHub puede retrasar las tareas programadas unos minutos; los avisos de gol llegan con hasta ~5–10 min de demora.
+
+## Salas de partido
+
+En un partido en vivo o por empezar, **Crear sala** (requiere sesión) abre `/partido/[id]/sala/[sala]`.
+- **Invitar:** el botón comparte el enlace (WhatsApp, etc.) o lo copia. El id de la sala es aleatorio y es la invitación.
+- **Dentro:** marcador, minuto y las **animaciones de cada momento** (cada miembro las ve al llegar el evento) + chat en tiempo real.
+- **Chat:** 1 mensaje cada 60 s por persona y hasta 200 caracteres. Lo hacen cumplir las **reglas de Firestore**
+  (no se puede saltar desde el navegador). El autor borra sus mensajes; el creador, cualquiera, y puede cerrar la sala.
+- La sala cierra 6 h después de creada. Nadie puede listar salas ajenas.
+- **Probar las reglas:** `npm run test:rules` (emulador de Firestore; necesita Java 11+, nunca toca la base real).
+- **Publica las reglas** después de actualizar: `npx firebase-tools deploy --only firestore:rules`.
 
 ## Animaciones de momentos clave
 

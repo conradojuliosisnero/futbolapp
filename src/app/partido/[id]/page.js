@@ -6,6 +6,7 @@ import { AutoRefresh } from '@/components/layout/auto-refresh';
 import { MatchClock } from '@/components/match/match-clock';
 import { LiveMoments } from '@/components/moments/live-moments';
 import { SoundToggle } from '@/components/moments/sound-toggle';
+import { CreateRoomButton } from '@/components/rooms/create-room-button';
 import { Scoreboard } from '@/components/match/scoreboard';
 import { PredictionBar } from '@/components/match/prediction-bar';
 import { MatchTabs } from '@/components/match/match-tabs';
@@ -33,7 +34,10 @@ export default async function MatchPage({ params }) {
         <LiveMoments match={match} />
         <div className="flex items-center justify-between gap-3">
           <Link href={`/ligas/${match.leagueId}`} className="text-sm font-medium text-subtle">← {match.league}{match.round && ` · ${match.round}`}</Link>
-          {match.status !== 'finished' && <SoundToggle />}
+          <span className="flex items-center gap-2">
+            <CreateRoomButton match={match} />
+            {match.status !== 'finished' && <SoundToggle />}
+          </span>
         </div>
         <MatchClock match={match} />
         <Scoreboard match={match} />
