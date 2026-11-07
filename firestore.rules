@@ -31,6 +31,13 @@ rules_version = '2';
 //
 // notifyState/{id}                    lo ya avisado por partido/equipo (solo el servidor; sin acceso desde la app)
 //
+// rooms/{roomId}                       sala de un partido (id aleatorio = invitación). Cierra 6 h después de creada.
+//   matchId, title, ownerUid, ownerName: string · createdAt, expiresAt: timestamp
+// rooms/{roomId}/members/{uid}         quién está en la sala
+//   name, photo · joinedAt · lastMessageAt, lastMessageId (límite de 1 mensaje cada 60 s)
+// rooms/{roomId}/messages/{msgId}      chat de la sala
+//   uid, name, photo · text (1–200) · createdAt
+//
 // predictions/{matchId}/votes/{uid}    un voto por usuario y partido
 //   pick: 'home' | 'draw' | 'away'
 //   at: timestamp
@@ -83,6 +90,66 @@ service cloud.firestore {
         && request.resource.data.pick in ['home', 'draw', 'away']
         && request.resource.data.at == request.time;
       allow delete: if isOwner(uid);
+    }
+
+    // ---------- Salas de partido ----------
+    // El id de la sala es aleatorio y funciona como invitación: con sesión y el enlace se puede ver y unirse.
+    match /rooms/{roomId} {
+      function roomPath() { return /databases/$(database)/documents/rooms/$(roomId); }
+      function memberPath(uid) { return /databases/$(database)/documents/rooms/$(roomId)/members/$(uid); }
+      function isMember() { return signedIn() && exists(memberPath(request.auth.uid)); }
+      // getAfter: también vale cuando la sala se crea en el mismo lote (el creador entra como miembro).
+      function isOpen() { return getAfter(roomPath()).data.expiresAt > request.time; }
+      function str(v, max) { return v is string && v.size() <= max; }
+
+      allow get: if signedIn();
+      allow list: if false; // no se pueden buscar ni listar salas ajenas
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['matchId', 'title', 'ownerUid', 'ownerName', 'createdAt', 'expiresAt'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && str(request.resource.data.matchId, 60) && str(request.resource.data.title, 120) && str(request.resource.data.ownerName, 80)
+        && request.resource.data.createdAt == request.time
+        // El cierre lo pone la app (hasta 6 h): la app no conoce la hora exacta del servidor.
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt > request.time + duration.value(1, 'h')
+        && request.resource.data.expiresAt <= request.time + duration.value(6, 'h');
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+
+      match /members/{uid} {
+        allow read: if isMember();
+        allow create: if isOwner(uid) && isOpen()
+          && request.resource.data.keys().hasOnly(['name', 'photo', 'joinedAt', 'lastMessageAt', 'lastMessageId'])
+          && str(request.resource.data.name, 80)
+          && (request.resource.data.photo == null || str(request.resource.data.photo, 500))
+          && request.resource.data.joinedAt == request.time
+          && request.resource.data.lastMessageAt == null
+          && request.resource.data.lastMessageId == null;
+        // Solo cambia "mi último mensaje", y solo si pasaron 60 s desde el anterior (límite del chat).
+        allow update: if isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessageAt', 'lastMessageId'])
+          && request.resource.data.lastMessageAt == request.time
+          && str(request.resource.data.lastMessageId, 40)
+          && (resource.data.lastMessageAt == null || request.time >= resource.data.lastMessageAt + duration.value(60, 's'));
+        allow delete: if isOwner(uid);
+      }
+
+      match /messages/{msgId} {
+        allow read: if isMember();
+        // 1 mensaje cada 60 s: en el mismo lote, la ficha del autor debe quedar apuntando a ESTE mensaje
+        // (y esa ficha solo se puede actualizar si pasaron 60 s). Así no se puede saltar el límite
+        // ni meter dos mensajes en un mismo lote.
+        allow create: if isMember() && isOpen()
+          && request.resource.data.keys().hasOnly(['uid', 'name', 'photo', 'text', 'createdAt'])
+          && request.resource.data.uid == request.auth.uid
+          && str(request.resource.data.name, 80)
+          && (request.resource.data.photo == null || str(request.resource.data.photo, 500))
+          && request.resource.data.text is string && request.resource.data.text.trim().size() > 0 && request.resource.data.text.size() <= 200
+          && request.resource.data.createdAt == request.time
+          && getAfter(memberPath(request.auth.uid)).data.lastMessageId == msgId
+          && getAfter(memberPath(request.auth.uid)).data.lastMessageAt == request.time;
+        allow delete: if signedIn()
+          && (resource.data.uid == request.auth.uid || get(roomPath()).data.ownerUid == request.auth.uid);
+      }
     }
   }
 }
