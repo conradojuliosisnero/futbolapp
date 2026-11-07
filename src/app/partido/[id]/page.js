@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
+import { AutoRefresh } from '@/components/layout/auto-refresh';
 import { VideoPlayer } from '@/components/match/video-player';
 import { Scoreboard } from '@/components/match/scoreboard';
 import { PredictionBar } from '@/components/match/prediction-bar';
@@ -23,8 +24,9 @@ export default async function MatchPage({ params }) {
 
   return (
     <AppShell active="en-vivo" counts={{ live: liveCount }} aside={<MatchTabs match={match} />} asideWide>
+      <AutoRefresh enabled={match.status === 'live'} />
       <div className="flex flex-col gap-5">
-        <Link href="/" className="text-sm font-medium text-subtle">← {match.league} · {match.round}</Link>
+        <Link href={`/ligas/${match.leagueId}`} className="text-sm font-medium text-subtle">← {match.league}{match.round && ` · ${match.round}`}</Link>
         <VideoPlayer live={match.status === 'live'} progress={match.progress} />
         <Scoreboard match={match} />
         {match.prediction && <PredictionBar match={match} />}

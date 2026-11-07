@@ -19,7 +19,7 @@ export function FeaturedMatch({ match, image }) {
 
       <div className="absolute inset-x-5 bottom-5 flex flex-col gap-3.5 md:inset-x-9 md:bottom-8 md:flex-row md:items-end md:justify-between md:gap-8">
         <div className="flex flex-col gap-3.5 md:gap-4.5">
-          <Eyebrow tone="primary">{match.league} · {match.round}</Eyebrow>
+          <Eyebrow tone="primary">{[match.league, match.round, match.status === 'scheduled' && [match.day, match.kickoff].filter(Boolean).join(' ')].filter(Boolean).join(' · ')}</Eyebrow>
           <div className="flex items-center justify-between gap-3 md:justify-start md:gap-7">
             <div className={team}><TeamCrest team={home} /><span>{home.name}</span></div>
             <div className="text-score-lg leading-none font-black tracking-tight whitespace-nowrap md:text-display">
@@ -29,11 +29,11 @@ export function FeaturedMatch({ match, image }) {
             </div>
             <div className={`${team} items-end text-right md:flex-row-reverse`}><TeamCrest team={away} /><span>{away.name}</span></div>
           </div>
-          {scorers && <p className="hidden text-sm text-muted-foreground md:block">{scorers.home.join(', ')} · {scorers.away.join(', ')}</p>}
+          {scorers?.home && <p className="hidden text-sm text-muted-foreground md:block">{scorers.home.join(', ')} · {scorers.away.join(', ')}</p>}
         </div>
         <div className="flex gap-2.5">
           <Button asChild size="touch" className="flex-1 md:flex-none">
-            <Link href={`/partido/${match.id}`}><Play className="fill-current" /> Ver en vivo</Link>
+            <Link href={`/partido/${match.id}`}><Play className="fill-current" /> {match.status === 'live' ? 'Ver en vivo' : 'Ver partido'}</Link>
           </Button>
           <FollowToggle />
         </div>

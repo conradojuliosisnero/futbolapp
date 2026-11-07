@@ -23,13 +23,14 @@ export default async function LeaguesPage() {
               style={stagger(i)}
               className={cn(ENTER, 'group flex items-center gap-4 rounded-2xl bg-card p-5 transition-[background-color,transform] hover:bg-secondary hover:text-inherit')}
             >
-              <span className="grid size-13 flex-none place-items-center rounded-full bg-neutral-1 text-sm font-black">{l.short}</span>
+              {/* eslint-disable-next-line @next/next/no-img-element -- escudo de la API externa */}
+              <span className="grid size-13 flex-none place-items-center rounded-full bg-white p-2"><img src={l.emblem} alt="" className="size-full object-contain" /></span>
               <span className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className="text-base font-extrabold">{l.name}</span>
-                <span className="text-md text-muted-foreground">Temporada {l.season} · {l.round}</span>
+                <span className="text-md text-muted-foreground">{l.country}</span>
                 <span className="mt-1 flex items-center gap-2 text-xs font-semibold text-subtle">
                   {l.live > 0 && <LiveBadge>{l.live} EN VIVO</LiveBadge>}
-                  {l.total} partidos
+                  {l.total} partidos esta semana
                 </span>
               </span>
               <ChevronRight className="size-5 text-faint transition-transform group-hover:translate-x-0.5" />

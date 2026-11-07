@@ -63,14 +63,16 @@ function Lineups({ match }) {
 }
 
 export function MatchTabs({ match, defaultTab = 'events' }) {
-  const empty = <p className="text-muted-foreground">El partido aún no empieza.</p>;
+  const note = (t) => <p className="text-muted-foreground">{t}</p>;
+  const empty = note(match.status === 'scheduled' ? 'El partido aún no empieza.'
+    : match.status === 'live' ? 'Sin jugadas todavía. Se actualizan cada pocos minutos.' : 'Jugadas no disponibles para este partido.');
   return (
     <SectionTabs
       label="Detalle del partido"
       defaultValue={defaultTab}
       items={[
         { value: 'events', label: 'Jugadas', content: match.events?.length ? <Timeline events={match.events} /> : empty },
-        { value: 'stats', label: 'Estadísticas', content: match.stats?.length ? <StatsList stats={match.stats} /> : empty },
+        { value: 'stats', label: 'Estadísticas', content: match.stats?.length ? <StatsList stats={match.stats} /> : note(match.status === 'scheduled' ? 'El partido aún no empieza.' : 'Estadísticas no disponibles en el plan actual de la API.') },
         { value: 'lineups', label: 'Alineación', content: <Lineups match={match} /> },
       ]}
     />

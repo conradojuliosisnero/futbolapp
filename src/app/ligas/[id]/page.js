@@ -5,7 +5,7 @@ import { SectionTabs } from '@/components/ui/section-tabs';
 import { StandingsTable } from '@/components/league/standings-table';
 import { MatchRow } from '@/components/match/match-list';
 import { getLeague, getLiveCount } from '@/lib/api/matches';
-import { FOLLOWING } from '@/config/navigation';
+import { DEFAULT_TEAM } from '@/config/leagues';
 import { siteConfig } from '@/config/site';
 
 export async function generateMetadata({ params }) {
@@ -18,32 +18,40 @@ export default async function LeaguePage({ params }) {
   const { id } = await params;
   const [league, liveCount] = await Promise.all([getLeague(id), getLiveCount()]);
   if (!league) notFound();
-  const myTeam = FOLLOWING.find((f) => f.type === 'team')?.code;
+
+  const table = league.groups.length ? (
+    <div className="flex flex-col gap-4">
+      {league.groups.map((g, i) => (
+        <div key={g.name ?? i} className="flex flex-col gap-2">
+          {g.name && <h3 className="text-xs font-semibold tracking-wider text-faint uppercase">{g.name}</h3>}
+          <StandingsTable rows={g.rows} highlight={DEFAULT_TEAM.id} />
+        </div>
+      ))}
+    </div>
+  ) : <p className="py-6 text-center text-muted-foreground">Esta competición no tiene tabla en esta fase.</p>;
+
+  const matches = league.matches.length
+    ? <div className="flex flex-col gap-2">{league.matches.map((m, i) => <MatchRow key={m.id} match={m} index={i} />)}</div>
+    : <p className="py-6 text-center text-muted-foreground">No hay partidos esta semana.</p>;
 
   return (
     <AppShell active="ligas" counts={{ live: liveCount }}>
       <div className="flex max-w-3xl flex-col gap-5">
         <Link href="/ligas" className="text-sm font-medium text-subtle">← Ligas</Link>
         <header className="flex items-center gap-4">
-          <span className="grid size-14 flex-none place-items-center rounded-full bg-neutral-1 font-black">{league.short}</span>
+          {/* eslint-disable-next-line @next/next/no-img-element -- escudo de la API externa */}
+          <span className="grid size-14 flex-none place-items-center rounded-full bg-white p-2.5"><img src={league.emblem} alt="" className="size-full object-contain" /></span>
           <div className="flex flex-col gap-1">
             <h1 className="text-[26px] leading-none font-black tracking-tight">{league.name}</h1>
-            <span className="text-md text-muted-foreground">Temporada {league.season} · {league.round}</span>
+            <span className="text-md text-muted-foreground">{[league.country, league.season && `Temporada ${league.season}`, league.round].filter(Boolean).join(' · ')}</span>
           </div>
         </header>
         <SectionTabs
           label="Secciones de la liga"
+          defaultValue={league.groups.length ? 'table' : 'matches'}
           items={[
-            { value: 'table', label: 'Tabla', content: <StandingsTable rows={league.standings} highlight={myTeam} /> },
-            {
-              value: 'matches',
-              label: 'Partidos',
-              content: (
-                <div className="flex flex-col gap-2">
-                  {league.matches.map((m, i) => <MatchRow key={m.id} match={m} index={i} />)}
-                </div>
-              ),
-            },
+            { value: 'table', label: 'Tabla', content: table },
+            { value: 'matches', label: 'Partidos', content: matches },
           ]}
         />
       </div>

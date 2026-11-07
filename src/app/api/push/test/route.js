@@ -24,10 +24,10 @@ export async function POST(request) {
   setVapidDetails(subject || 'mailto:soporte@futbolapp.app', pub, priv);
   try {
     await sendNotification(body.subscription, JSON.stringify({
-      title: '¡GOL! Atlético Norte 3–1',
-      body: "M. Ríos marca su doblete al 78'. Notificación de prueba.",
-      url: '/partido/atn-rco',
-      tag: 'atn-rco',
+      title: 'Futbolapp · notificación de prueba',
+      body: 'Así te avisaremos de los goles de tus equipos.',
+      url: '/partidos',
+      tag: 'test',
     }));
     return Response.json({ ok: true });
   } catch (e) {

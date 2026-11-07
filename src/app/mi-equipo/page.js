@@ -6,7 +6,7 @@ import { Eyebrow } from '@/components/ui/eyebrow';
 import { StandingsTable, FormGuide } from '@/components/league/standings-table';
 import { MatchRow } from '@/components/match/match-list';
 import { getTeamOverview, getLiveCount } from '@/lib/api/matches';
-import { FOLLOWING } from '@/config/navigation';
+import { DEFAULT_TEAM } from '@/config/leagues';
 import { siteConfig } from '@/config/site';
 
 export const metadata = { title: `Mi equipo · ${siteConfig.name}` };
@@ -14,8 +14,7 @@ export const metadata = { title: `Mi equipo · ${siteConfig.name}` };
 const ORDER = { live: 0, scheduled: 1, finished: 2 };
 
 export default async function MyTeamPage() {
-  const code = FOLLOWING.find((f) => f.type === 'team')?.code;
-  const [data, liveCount] = await Promise.all([code ? getTeamOverview(code) : null, getLiveCount()]);
+  const [data, liveCount] = await Promise.all([getTeamOverview(DEFAULT_TEAM.id, DEFAULT_TEAM.league), getLiveCount()]);
 
   if (!data) {
     return (
@@ -25,9 +24,9 @@ export default async function MyTeamPage() {
     );
   }
 
-  const { team, league, position, standing: s, standings, matches } = data;
-  const sorted = [...matches].sort((a, b) => ORDER[a.status] - ORDER[b.status]);
-  const stats = [['PJ', s.played], ['G', s.won], ['E', s.drawn], ['P', s.lost], ['Pts', s.pts]];
+  const { team, league, position, standing: s, form, standings, matches } = data;
+  const sorted = [...matches].sort((a, b) => ORDER[a.status] - ORDER[b.status] || (a.status === 'finished' ? b.utc - a.utc : a.utc - b.utc));
+  const stats = s ? [['PJ', s.played], ['G', s.won], ['E', s.drawn], ['P', s.lost], ['Pts', s.pts]] : [];
 
   return (
     <AppShell active="mi-equipo" counts={{ live: liveCount }}>
@@ -36,20 +35,20 @@ export default async function MyTeamPage() {
           <div className="flex items-center gap-4">
             <TeamCrest team={team} size="lg" />
             <div className="flex flex-col gap-1.5">
-              <Eyebrow tone="primary">{league.name} · {position}º lugar</Eyebrow>
+              <Eyebrow tone="primary">{[league.name, position && `${position}º lugar`].filter(Boolean).join(' · ')}</Eyebrow>
               <h1 className="text-[26px] leading-none font-black tracking-tight md:text-[32px]">{team.name}</h1>
             </div>
           </div>
-          <div className="grid grid-cols-5 gap-2">
+          {stats.length > 0 && <div className="grid grid-cols-5 gap-2">
             {stats.map(([label, value]) => (
               <div key={label} className="flex flex-col items-center gap-0.5 rounded-xl bg-secondary py-2.5">
                 <span className="text-xl font-black tabular-nums">{value}</span>
                 <span className="text-xs font-semibold text-faint">{label}</span>
               </div>
             ))}
-          </div>
+          </div>}
           <div className="flex items-center justify-between gap-3 text-md font-semibold text-muted-foreground">
-            Últimos 5 <FormGuide form={s.form} />
+            Últimos 5 <FormGuide form={form} />
           </div>
         </header>
 
@@ -61,12 +60,12 @@ export default async function MyTeamPage() {
               label: 'Partidos',
               content: <div className="flex flex-col gap-2">{sorted.map((m, i) => <MatchRow key={m.id} match={m} index={i} highlighted={m.status === 'live'} />)}</div>,
             },
-            { value: 'table', label: 'Tabla', content: <StandingsTable rows={standings} highlight={team.code} /> },
+            { value: 'table', label: 'Tabla', content: <StandingsTable rows={standings} highlight={team.id} /> },
           ]}
         />
 
         <p className="text-center text-xs text-faint">
-          Equipo de ejemplo. Podrás elegir el tuyo al <Link href="/entrar" className="text-primary">iniciar sesión</Link>.
+          Equipo por defecto. Podrás elegir el tuyo al <Link href="/entrar" className="text-primary">iniciar sesión</Link>.
         </p>
       </div>
     </AppShell>

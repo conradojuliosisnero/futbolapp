@@ -6,6 +6,6 @@ export function TeamCrest({ team, size = 'md' }) {
   const style = { width: px, height: px };
   const cls = 'inline-block flex-none rounded-full bg-neutral-1 object-cover';
   // eslint-disable-next-line @next/next/no-img-element -- escudos de la API externa, sin optimizar
-  if (team?.crest) return <img src={team.crest} alt={team.name} className={cls} style={style} />;
+  if (team?.crest) return <img src={team.crest} alt="" loading="lazy" className="inline-block flex-none object-contain" style={style} />;
   return <span className={cls} style={style} aria-hidden />;
 }

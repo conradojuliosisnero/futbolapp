@@ -1,6 +1,7 @@
 import { Bell } from '@/components/animate-ui/icons/bell';
 import { SectionHeader } from '@/components/ui/section-header';
 import { Eyebrow } from '@/components/ui/eyebrow';
+import { TeamCrest } from '@/components/ui/team-crest';
 import { AnimatedLink } from '@/components/ui/animated-link';
 import { cn, ENTER, stagger } from '@/lib/utils';
 
@@ -12,14 +13,17 @@ export function MatchRow({ match, highlighted, index }) {
       style={index != null ? stagger(index) : undefined}
       className={cn(
         index != null && ENTER,
-        'grid grid-cols-[48px_1fr_auto] items-center gap-3 rounded-2xl bg-card p-3.5 transition-[background-color,transform] hover:bg-secondary hover:text-inherit',
+        'grid grid-cols-[52px_1fr_auto] items-center gap-3 rounded-2xl bg-card p-3.5 transition-[background-color,transform] hover:bg-secondary hover:text-inherit',
         highlighted && 'bg-secondary ring-[1.5px] ring-primary ring-inset',
       )}
     >
-      <span className={cn('text-md font-bold', live ? 'text-live' : 'text-subtle')}>{live ? match.minute : match.kickoff}</span>
-      <span className="flex flex-col gap-1 text-sm font-semibold">
-        <span>{match.home.name}</span>
-        <span className="text-muted-foreground">{match.away.name}</span>
+      <span className={cn('flex flex-col text-md font-bold leading-tight', live ? 'text-live' : 'text-subtle')}>
+        {match.day && <span className="text-2xs font-semibold text-faint capitalize">{match.day}</span>}
+        {match.label}
+      </span>
+      <span className="flex min-w-0 flex-col gap-1 text-sm font-semibold">
+        <span className="flex items-center gap-2 truncate"><TeamCrest team={match.home} size={18} />{match.home.name}</span>
+        <span className="flex items-center gap-2 truncate text-muted-foreground"><TeamCrest team={match.away} size={18} />{match.away.name}</span>
       </span>
       {match.score
         ? <span className="flex flex-col gap-1 text-right text-sm font-extrabold"><span>{match.score[0]}</span><span>{match.score[1]}</span></span>

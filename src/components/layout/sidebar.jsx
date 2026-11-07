@@ -47,7 +47,7 @@ export function Sidebar({ active, counts = {} }) {
         <div className="px-3.5 pb-1"><Eyebrow>Siguiendo</Eyebrow></div>
         {FOLLOWING.map((f) => (
           <Link key={f.id} href={f.href} className="flex items-center gap-2.5 px-3.5 py-1.5 text-sm font-semibold">
-            <TeamCrest team={{ name: f.label }} size="sm" />{f.label}
+            <TeamCrest team={{ name: f.label, crest: f.crest }} size="sm" />{f.label}
           </Link>
         ))}
       </div>

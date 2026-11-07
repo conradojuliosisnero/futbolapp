@@ -5,6 +5,7 @@ const FORM = { G: 'bg-primary text-primary-foreground', E: 'bg-neutral-2', P: 'b
 
 /** Últimos resultados: 'GGEPG' → cuadritos G/E/P */
 export function FormGuide({ form }) {
+  if (!form) return <span className="text-faint">—</span>;
   return (
     <span className="inline-flex gap-1" aria-label={`Últimos partidos: ${form}`}>
       {[...form].map((r, i) => (
@@ -14,7 +15,7 @@ export function FormGuide({ form }) {
   );
 }
 
-/** rows: [{ team, played, gd, pts, form }] · highlight: código del equipo a resaltar */
+/** rows: [{ team, played, gd, pts, form }] · highlight: id del equipo a resaltar */
 export function StandingsTable({ rows, highlight }) {
   const num = 'px-1.5 text-center tabular-nums';
   return (
@@ -32,7 +33,7 @@ export function StandingsTable({ rows, highlight }) {
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={r.team.code} style={stagger(i)} className={cn(ENTER, 'border-t transition-colors hover:bg-secondary/60', r.team.code === highlight && 'bg-secondary')}>
+            <tr key={r.team.id ?? r.team.code} style={stagger(i)} className={cn(ENTER, 'border-t transition-colors hover:bg-secondary/60', r.team.id === highlight && 'bg-secondary')}>
               <td className={cn('py-3 font-bold', i === 0 ? 'text-primary' : 'text-subtle')}>{i + 1}</td>
               <td className="py-3">
                 <span className="flex items-center gap-2.5 font-semibold">
