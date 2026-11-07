@@ -4,10 +4,31 @@
       "collectionGroup": "predictions",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "settled", "order": "ASCENDING" },
-        { "fieldPath": "utc", "order": "ASCENDING" }
+        {
+          "fieldPath": "settled",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "utc",
+          "order": "ASCENDING"
+        }
       ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    {
+      "collectionGroup": "pushSubscriptions",
+      "fieldPath": "endpoint",
+      "indexes": [
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION"
+        },
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        }
+      ]
+    }
+  ]
 }

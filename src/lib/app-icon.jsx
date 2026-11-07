@@ -16,3 +16,18 @@ export function appIcon(size, { maskable = false } = {}) {
     { width: size, height: size, headers: { 'Cache-Control': 'public, max-age=604800, immutable' } },
   );
 }
+
+/** Ícono pequeño de la barra de estado de Android (badge): solo cuenta la silueta, así que va blanco sobre transparente. */
+export function badgeIcon(size = 96) {
+  const font = Math.round(size * 0.78);
+  return new ImageResponse(
+    (
+      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', fontSize: font, fontWeight: 900, color: '#ffffff', lineHeight: 1, marginTop: -font * 0.06 }}>
+          {siteConfig.logoMark}
+        </div>
+      </div>
+    ),
+    { width: size, height: size, headers: { 'Cache-Control': 'public, max-age=604800, immutable' } },
+  );
+}

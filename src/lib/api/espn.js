@@ -17,7 +17,8 @@ async function espn(url, revalidate) {
     // Cuándo respondió ESPN de verdad (la caché guarda el header Date): el reloj en vivo avanza desde ahí.
     const at = Date.parse(res.headers.get('date') ?? '') || Date.now();
     if (Array.isArray(json?.events)) json.events.forEach((e) => { e.__at = at; });
-    if (json?.header) json.header.__at = at;
+    // Solo en objetos: en las noticias, `header` es un texto ("Noticias - Premier League").
+    if (json?.header && typeof json.header === 'object') json.header.__at = at;
     return json;
   } catch (e) {
     console.warn('ESPN no respondió:', e.message);
