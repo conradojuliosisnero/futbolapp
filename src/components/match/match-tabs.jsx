@@ -1,5 +1,6 @@
 import { Goal, ArrowLeftRight } from 'lucide-react';
 import { SectionTabs } from '@/components/ui/section-tabs';
+import { LineupPitch } from './lineup-pitch';
 import { SplitBar } from '@/components/ui/split-bar';
 import { Media } from '@/components/ui/media';
 import { cn, ENTER, stagger } from '@/lib/utils';
@@ -46,33 +47,24 @@ function StatsList({ stats = [] }) {
 }
 
 function Lineups({ match }) {
-  const { lineups, home, away } = match;
-  if (!lineups) return <p className="text-muted-foreground">Alineaciones no disponibles.</p>;
-  return (
-    <div className="grid grid-cols-2 gap-4">
-      {[[home, lineups.home], [away, lineups.away]].map(([team, players]) => (
-        <div key={team.code} className="flex flex-col gap-2.5">
-          <div className="text-sm font-extrabold">{team.name}</div>
-          <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm text-muted-foreground">
-            {players.map((p) => <li key={p}>{p}</li>)}
-          </ol>
-        </div>
-      ))}
-    </div>
-  );
+  if (!match.lineups) {
+    return <p className="text-muted-foreground">{match.status === 'scheduled'
+      ? 'Las alineaciones se publican cerca de una hora antes del partido.' : 'Alineaciones no disponibles para este partido.'}</p>;
+  }
+  return <LineupPitch lineups={match.lineups} homeName={match.home.name} awayName={match.away.name} />;
 }
 
 export function MatchTabs({ match, defaultTab = 'events' }) {
   const note = (t) => <p className="text-muted-foreground">{t}</p>;
   const empty = note(match.status === 'scheduled' ? 'El partido aún no empieza.'
-    : match.status === 'live' ? 'Sin jugadas todavía. Se actualizan cada pocos minutos.' : 'Jugadas no disponibles para este partido.');
+    : match.status === 'live' ? 'Sin jugadas todavía. Se actualizan cada 15 minutos.' : 'Jugadas no disponibles para este partido.');
   return (
     <SectionTabs
       label="Detalle del partido"
       defaultValue={defaultTab}
       items={[
         { value: 'events', label: 'Jugadas', content: match.events?.length ? <Timeline events={match.events} /> : empty },
-        { value: 'stats', label: 'Estadísticas', content: match.stats?.length ? <StatsList stats={match.stats} /> : note(match.status === 'scheduled' ? 'El partido aún no empieza.' : 'Estadísticas no disponibles en el plan actual de la API.') },
+        { value: 'stats', label: 'Estadísticas', content: match.stats?.length ? <StatsList stats={match.stats} /> : note(match.status === 'scheduled' ? 'El partido aún no empieza.' : 'Estadísticas no disponibles para este partido.') },
         { value: 'lineups', label: 'Alineación', content: <Lineups match={match} /> },
       ]}
     />

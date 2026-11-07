@@ -1,13 +1,13 @@
 import 'server-only';
 import { fd } from './football-data';
-import { liveFixtures } from './api-football';
+import { liveFixtures, fixturesOnDate, lineups, statistics, events } from './api-football';
 import { sameTeam } from './team-match.mjs';
 import { LEAGUES, leagueEmblem } from '@/config/leagues';
 import { siteConfig } from '@/config/site';
 
 // Capa de datos real. Presupuesto de consultas (ver README → APIs):
 //   football-data (10/min): ventana de partidos 60 s · tablas 1 h · partidos de un equipo 10 min.
-//   API-Football (100/día): solo eventos en vivo del detalle de partido, 15 min.
+//   API-Football (100/día): solo al abrir un partido → eventos, alineaciones y estadísticas (ver api-football.js).
 const CODES = LEAGUES.map((l) => l.code);
 const TZ = siteConfig.timeZone;
 
@@ -107,7 +107,7 @@ async function standingsOf(code) {
     }));
     return { groups, season: data.season };
   } catch (e) {
-    if (String(e.message).includes(' 404 ')) return { groups: [], season: null }; // copa sin tabla (eliminatorias)
+    if (/ (403|404) /.test(String(e.message))) return { groups: [], season: null }; // copa sin tabla o fuera del plan
     throw e;
   }
 }
@@ -121,21 +121,75 @@ function toEvent(e, homeName) {
   if (e.type === 'Goal') {
     if (e.detail === 'Missed Penalty') return { min, side, type: 'var', title: `Penal fallado · ${who}` };
     const extra = e.detail === 'Penalty' ? ' (penal)' : e.detail === 'Own Goal' ? ' (autogol)' : '';
-    return { min, side, type: 'goal', title: `¡GOL! ${e.team.name}`, text: `${who}${extra}${e.assist?.name ? ` · asistencia de ${e.assist.name}` : ''}` };
+    return { min, side, player: who, type: 'goal', title: `¡GOL! ${e.team.name}`, text: `${who}${extra}${e.assist?.name ? ` · asistencia de ${e.assist.name}` : ''}` };
   }
   if (e.type === 'Card') return { min, side, type: e.detail.includes('Red') ? 'red' : 'yellow', title: `${e.detail.includes('Red') ? 'Roja' : 'Amarilla'} · ${who} (${e.team.name})` };
   if (e.type === 'subst') return { min, side, type: 'sub', title: `Cambio · ${e.team.name}`, text: `${who} ↔ ${e.assist?.name ?? ''}` };
   return { min, side, type: 'var', title: `VAR · ${e.detail}` };
 }
 
-async function withLiveEvents(match) {
-  const fixture = (await liveFixtures()).find(
-    (f) => sameTeam(f.teams.home.name, match.home.name) && sameTeam(f.teams.away.name, match.away.name),
-  );
-  if (!fixture) return match;
-  const events = fixture.events.map((e) => toEvent(e, fixture.teams.home.name));
-  const goals = (side) => events.filter((e) => e.type === 'goal' && e.side === side).map((e) => `${e.text.split(' (')[0].split(' · ')[0]} ${e.min}`);
-  return { ...match, events: events.reverse(), scorers: { home: goals('home'), away: goals('away') } };
+// ---------- estadísticas y alineaciones (API-Football) ----------
+
+const STAT_LABELS = [
+  ['Ball Possession', 'Posesión %'], ['expected_goals', 'Goles esperados (xG)'], ['Total Shots', 'Tiros'],
+  ['Shots on Goal', 'Tiros a puerta'], ['Corner Kicks', 'Córners'], ['Fouls', 'Faltas'], ['Offsides', 'Fueras de juego'],
+  ['Yellow Cards', 'Amarillas'], ['Red Cards', 'Rojas'], ['Goalkeeper Saves', 'Atajadas'], ['Total passes', 'Pases'],
+  ['Passes %', 'Precisión de pase %'],
+];
+const num = (v) => (v == null ? 0 : parseFloat(String(v)) || 0);
+// API-Football no garantiza el orden local/visitante: se ubica por nombre.
+const homeFirst = (resp, homeName) => (sameTeam(resp[0].team.name, homeName) ? [resp[0], resp[1]] : [resp[1], resp[0]]);
+
+function toStats(resp, homeName) {
+  if (!resp || resp.length < 2) return [];
+  const [h, a] = homeFirst(resp, homeName);
+  const val = (t, type) => t.statistics.find((x) => x.type === type)?.value;
+  return STAT_LABELS.filter(([type]) => val(h, type) != null || val(a, type) != null)
+    .map(([type, label]) => ({ label, home: num(val(h, type)), away: num(val(a, type)) }));
+}
+
+const POS = { G: 'POR', D: 'DEF', M: 'MED', F: 'DEL' };
+function toLineups(resp, homeName) {
+  if (!resp || resp.length < 2) return null;
+  const player = (x) => ({ number: x.player.number, name: x.player.name, pos: POS[x.player.pos] ?? x.player.pos ?? '', grid: x.player.grid });
+  const side = (t) => ({ formation: t.formation, coach: t.coach?.name, startXI: t.startXI.map(player), subs: t.substitutes.map(player) });
+  const [h, a] = homeFirst(resp, homeName);
+  return { home: side(h), away: side(a) };
+}
+
+/** Busca el mismo partido en API-Football (en vivo, o por fecha). */
+async function findFixture(match) {
+  const same = (h, a) => sameTeam(h, match.home.name) && sameTeam(a, match.away.name);
+  if (match.status === 'live') {
+    const f = (await liveFixtures()).find((x) => same(x.teams.home.name, x.teams.away.name));
+    if (f) return { id: f.fixture.id, liveEvents: f.events };
+  }
+  try {
+    const f = (await fixturesOnDate(new Date(match.utc).toISOString().slice(0, 10))).find((x) => same(x.home, x.away));
+    return f ? { id: f.id } : null;
+  } catch { return null; }
+}
+
+/** Agrega eventos, goleadores, estadísticas y alineaciones. Lo que la API no tenga, simplemente no aparece. */
+async function withDetails(match) {
+  // Las alineaciones se publican ~1 h antes; antes de eso no se gasta cuota.
+  if (match.status === 'scheduled' && match.utc - Date.now() > 60 * 60000) return match;
+  const fx = await findFixture(match);
+  if (!fx) return match;
+  const [lu, st, ev] = await Promise.all([
+    lineups(fx.id),
+    match.status !== 'scheduled' ? statistics(fx.id, match.status === 'live') : null,
+    match.status === 'finished' ? events(fx.id) : null,
+  ]);
+  const evs = (fx.liveEvents ?? ev ?? []).map((e) => toEvent(e, match.home.name));
+  const goals = (side) => evs.filter((e) => e.type === 'goal' && e.side === side).map((e) => `${e.player} ${e.min}`);
+  return {
+    ...match,
+    events: evs.reverse(),
+    scorers: evs.length ? { home: goals('home'), away: goals('away') } : undefined,
+    stats: toStats(st, match.home.name),
+    lineups: toLineups(lu, match.home.name),
+  };
 }
 
 // ---------- funciones que usan las pantallas ----------
@@ -149,14 +203,15 @@ export async function getFeaturedMatch() {
     ?? null;
 }
 
-export async function getMatch(id) {
+/** details: true agrega eventos, estadísticas y alineaciones (gasta API-Football; solo en la página del partido). */
+export async function getMatch(id, { details = false } = {}) {
   let match = (await windowMatches()).find((m) => m.id === String(id));
   if (!match) {
     // Partido fuera de la ventana: una consulta propia, con caché larga (ya no cambia).
     try { match = toMatch(await fd(`/matches/${encodeURIComponent(id)}`, { revalidate: 3600 })); }
     catch (e) { if (/ (400|404) /.test(e.message)) return null; throw e; }
   }
-  return match.status === 'live' ? withLiveEvents(match) : match;
+  return details ? withDetails(match) : match;
 }
 
 export async function getLiveCount() {
@@ -196,7 +251,7 @@ const STATUS_ORDER = { live: 0, scheduled: 1, finished: 2 };
 export async function getLeague(code) {
   const conf = LEAGUES.find((l) => l.code === code);
   if (!conf) return null;
-  const [{ groups, season }, all] = await Promise.all([standingsOf(code), windowMatches()]);
+  const [{ groups, season }, all, scorers] = await Promise.all([standingsOf(code), windowMatches(), getScorers(code)]);
   return {
     ...conf,
     id: code,
@@ -204,37 +259,72 @@ export async function getLeague(code) {
     season: season ? `${season.startDate.slice(0, 4)}/${season.endDate.slice(2, 4)}` : '',
     round: season?.currentMatchday ? `Jornada ${season.currentMatchday}` : '',
     groups,
+    scorers,
     matches: all.filter((m) => m.leagueId === code).sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || a.utc - b.utc),
   };
 }
 
-/** Resumen de un equipo: posición en su liga, tabla, forma y partidos (±30 días). */
-export async function getTeamOverview(teamId, leagueCode) {
-  const from = dayKey(Date.now() - 30 * DAY), to = dayKey(Date.now() + 30 * DAY);
+/** Goleadores de una liga (football-data, 1 h de caché). */
+export async function getScorers(code) {
+  try {
+    const d = await fd(`/competitions/${code}/scorers?limit=15`, { revalidate: 3600 });
+    return (d.scorers ?? []).map((x) => ({
+      player: x.player.name, nationality: x.player.nationality, team: team(x.team),
+      goals: x.goals ?? 0, assists: x.assists ?? 0, penalties: x.penalties ?? 0, played: x.playedMatches ?? null,
+    }));
+  } catch { return []; }
+}
+
+const POSITION_GROUPS = ['Porteros', 'Defensas', 'Mediocampistas', 'Delanteros', 'Otros'];
+const positionGroup = (p = '') => (/goal/i.test(p) ? 'Porteros' : /back|defen/i.test(p) ? 'Defensas'
+  : /midfield/i.test(p) ? 'Mediocampistas' : /offen|forward|wing|striker/i.test(p) ? 'Delanteros' : 'Otros');
+const POSITION_ES = { Goalkeeper: 'Portero', Defence: 'Defensa', Midfield: 'Mediocampista', Offence: 'Delantero',
+  'Centre-Back': 'Central', 'Left-Back': 'Lateral izq.', 'Right-Back': 'Lateral der.', 'Defensive Midfield': 'Pivote',
+  'Central Midfield': 'Mediocentro', 'Attacking Midfield': 'Mediapunta', 'Left Winger': 'Extremo izq.',
+  'Right Winger': 'Extremo der.', 'Centre-Forward': 'Delantero centro', 'Left Midfield': 'Volante izq.', 'Right Midfield': 'Volante der.' };
+const age = (dob) => (dob ? Math.floor((Date.now() - Date.parse(dob)) / (365.25 * DAY)) : null);
+
+/** Página de equipo: ficha, plantilla, próximos partidos, resultados, forma y tabla de su liga. */
+export async function getTeamPage(teamId) {
+  const id = Number(teamId);
+  if (!Number.isInteger(id) || id <= 0) return null;
+  let info;
+  try { info = await fd(`/teams/${id}`, { revalidate: 86400 }); }
+  catch (e) { if (/ (400|403|404) /.test(e.message)) return null; throw e; }
+
+  const running = info.runningCompetitions ?? [];
+  const leagueComp = running.find((c) => c.type === 'LEAGUE' && CODES.includes(c.code)) ?? running.find((c) => c.type === 'LEAGUE');
+  const from = dayKey(Date.now() - 45 * DAY), to = dayKey(Date.now() + 45 * DAY);
   const [{ groups }, data] = await Promise.all([
-    standingsOf(leagueCode),
-    fd(`/teams/${teamId}/matches?dateFrom=${from}&dateTo=${to}`, { revalidate: 600 }),
+    leagueComp ? standingsOf(leagueComp.code) : { groups: [] },
+    fd(`/teams/${id}/matches?dateFrom=${from}&dateTo=${to}`, { revalidate: 600 }),
   ]);
   const matches = (data.matches ?? []).map(toMatch);
-  const rows = groups.find((g) => g.rows.some((r) => r.team.id === teamId))?.rows ?? [];
-  const idx = rows.findIndex((r) => r.team.id === teamId);
-  const fromMatch = matches.find((m) => m.home.id === teamId) ?? matches.find((m) => m.away.id === teamId);
-  const me = idx >= 0 ? rows[idx].team : fromMatch && (fromMatch.home.id === teamId ? fromMatch.home : fromMatch.away);
-  if (!me) return null;
-
-  // Forma de los últimos 5 partidos terminados (football-data gratis no la trae en la tabla).
-  const form = matches.filter((m) => m.status === 'finished').sort((a, b) => b.utc - a.utc).slice(0, 5).map((m) => {
-    const [h, a] = m.score; const mine = m.home.id === teamId ? h - a : a - h;
+  const rows = groups.find((g) => g.rows.some((r) => r.team.id === id))?.rows ?? [];
+  const idx = rows.findIndex((r) => r.team.id === id);
+  const results = matches.filter((m) => m.status === 'finished').sort((a, b) => b.utc - a.utc);
+  const form = results.slice(0, 5).map((m) => {
+    const [h, a] = m.score; const mine = m.home.id === id ? h - a : a - h;
     return mine > 0 ? 'G' : mine === 0 ? 'E' : 'P';
   }).join('');
 
+  const squad = POSITION_GROUPS.map((group) => ({
+    group,
+    players: (info.squad ?? []).filter((p) => positionGroup(p.position) === group).map((p) => ({
+      id: p.id, name: p.name, position: POSITION_ES[p.position] ?? p.position ?? '', nationality: p.nationality, age: age(p.dateOfBirth), number: p.shirtNumber ?? null,
+    })),
+  })).filter((g) => g.players.length);
+
   return {
-    team: me,
-    league: { ...LEAGUES.find((l) => l.code === leagueCode), id: leagueCode },
+    team: { ...team(info), founded: info.founded, venue: info.venue, colors: info.clubColors, website: info.website, coach: info.coach?.name ?? null },
+    league: leagueComp ? { id: leagueComp.code, name: leagueName(leagueComp.code, leagueComp.name), inApp: CODES.includes(leagueComp.code) } : null,
     position: idx >= 0 ? idx + 1 : null,
-    standing: idx >= 0 ? { ...rows[idx], form } : null,
+    standing: idx >= 0 ? rows[idx] : null,
     form,
     standings: rows,
-    matches,
+    live: matches.filter((m) => m.status === 'live'),
+    upcoming: matches.filter((m) => m.status === 'scheduled').sort((a, b) => a.utc - b.utc),
+    results,
+    squad,
   };
 }

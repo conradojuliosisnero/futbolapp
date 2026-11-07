@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { TeamCrest } from '@/components/ui/team-crest';
 import { cn, ENTER, stagger } from '@/lib/utils';
 
@@ -36,11 +37,11 @@ export function StandingsTable({ rows, highlight }) {
             <tr key={r.team.id ?? r.team.code} style={stagger(i)} className={cn(ENTER, 'border-t transition-colors hover:bg-secondary/60', r.team.id === highlight && 'bg-secondary')}>
               <td className={cn('py-3 font-bold', i === 0 ? 'text-primary' : 'text-subtle')}>{i + 1}</td>
               <td className="py-3">
-                <span className="flex items-center gap-2.5 font-semibold">
+                <Link href={`/equipo/${r.team.id}`} className="flex items-center gap-2.5 font-semibold transition-colors hover:text-primary">
                   <TeamCrest team={r.team} size="sm" />
                   <span className="hidden sm:inline">{r.team.name}</span>
                   <span className="sm:hidden">{r.team.code}</span>
-                </span>
+                </Link>
               </td>
               <td className={cn(num, 'text-muted-foreground')}>{r.played}</td>
               <td className={cn(num, 'text-muted-foreground')}>{r.gd > 0 ? `+${r.gd}` : r.gd}</td>

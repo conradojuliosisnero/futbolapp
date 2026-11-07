@@ -19,7 +19,7 @@ export async function generateMetadata({ params }) {
 
 export default async function MatchPage({ params }) {
   const { id } = await params;
-  const [match, liveCount] = await Promise.all([getMatch(id), getLiveCount()]);
+  const [match, liveCount] = await Promise.all([getMatch(id, { details: true }), getLiveCount()]);
   if (!match) notFound();
 
   return (
