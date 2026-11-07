@@ -52,5 +52,13 @@ const ERRORS = {
   'auth/popup-closed-by-user': 'Cerraste la ventana de Google.',
   'auth/user-not-found': 'No hay una cuenta con ese correo.',
   'auth/missing-email': 'Escribe tu correo.',
+  'auth/missing-password': 'Escribe tu contraseña.',
+  'auth/operation-not-allowed': 'Este método de inicio de sesión no está activado en Firebase.',
+  'auth/unauthorized-domain': 'Este dominio no está autorizado en Firebase (Authentication > Configuración > Dominios autorizados).',
+  'auth/popup-blocked': 'El navegador bloqueó la ventana de Google. Permite ventanas emergentes e intenta de nuevo.',
+  'auth/cancelled-popup-request': 'Cerraste la ventana de Google.',
+  'auth/network-request-failed': 'Sin conexión. Revisa tu internet e intenta de nuevo.',
+  'auth/account-exists-with-different-credential': 'Ese correo ya está registrado con otro método. Entra con correo y contraseña.',
+  'auth/user-disabled': 'Esta cuenta está desactivada.',
 };
 export const authErrorMessage = (e) => ERRORS[e?.code] ?? 'No se pudo iniciar sesión. Intenta de nuevo.';
