@@ -11,6 +11,10 @@ import { MatchClock } from '@/components/match/match-clock';
 import { Scoreboard } from '@/components/match/scoreboard';
 import { PredictionBar } from '@/components/match/prediction-bar';
 import { MatchTabs } from '@/components/match/match-tabs';
+import { LiveMoments } from '@/components/moments/live-moments';
+import { SoundToggle } from '@/components/moments/sound-toggle';
+import { useMoments } from '@/components/moments/moments-provider';
+import { MOMENT_LABELS, MOMENT_SAMPLES } from '@/lib/moments/samples';
 import { cn } from '@/lib/utils';
 import { initialState, reducer, toMatch, HOME, AWAY } from './simulator';
 
@@ -23,26 +27,6 @@ const EVENTS = [
   { event: 'missed-penalty', label: 'Penal fallado', emoji: '❌' },
 ];
 const SPEEDS = [{ label: '1 s', ms: 1000 }, { label: '0,5 s', ms: 500 }, { label: '0,2 s', ms: 200 }];
-
-/** Aviso del último evento. Es el punto donde se conectarán las animaciones de goles, tarjetas, etc. */
-function EventBanner({ event }) {
-  const [visible, setVisible] = useState(true);
-  useEffect(() => {
-    const t = setTimeout(() => setVisible(false), 3500);
-    return () => clearTimeout(t);
-  }, []);
-  if (!visible) return null;
-  const tone = event.type === 'goal' ? 'bg-primary text-primary-foreground'
-    : event.type === 'red' ? 'bg-live text-live-foreground'
-    : event.type === 'yellow' ? 'bg-warning text-background' : 'bg-card text-foreground ring-1 ring-border';
-  return (
-    <div role="status" className={cn('pointer-events-none fixed inset-x-4 top-4 z-50 mx-auto max-w-md rounded-2xl px-5 py-3.5 shadow-2xl animate-in fade-in-0 slide-in-from-top-6 zoom-in-95 duration-300', tone)}>
-      <p className="text-xs font-bold opacity-80">{event.min}</p>
-      <p className="text-base font-black">{event.title}</p>
-      {event.text && <p className="text-sm opacity-90">{event.text}</p>}
-    </div>
-  );
-}
 
 function SideControls({ side, team, disabled, fire }) {
   return (
@@ -59,10 +43,47 @@ function SideControls({ side, team, disabled, fire }) {
   );
 }
 
+/** Dispara cada animación con datos de ejemplo, en pantalla completa o como banner. */
+function MomentsPanel() {
+  const { play, clear, setVariant } = useMoments();
+  const [variant, setV] = useState('full');
+  const change = (v) => { setV(v); setVariant(v); };
+  return (
+    <section className="flex flex-col gap-3 rounded-3xl bg-card p-4 md:p-5" aria-label="Probar animaciones">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-semibold tracking-wider text-faint uppercase">Animaciones</span>
+        <div className="ml-auto flex items-center gap-2">
+          {[['full', 'Pantalla completa'], ['banner', 'Banner']].map(([v, label]) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => change(v)}
+              aria-pressed={variant === v}
+              className={cn('rounded-full px-3 py-1 text-sm font-semibold transition-colors', variant === v ? 'bg-primary text-primary-foreground' : 'bg-secondary text-control')}
+            >
+              {label}
+            </button>
+          ))}
+          <SoundToggle />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {Object.keys(MOMENT_SAMPLES).map((type) => (
+          <Button key={type} variant="secondary" className="h-10 rounded-xl" onClick={() => { clear(); play(type, MOMENT_SAMPLES[type]); }}>
+            {MOMENT_LABELS[type]}
+          </Button>
+        ))}
+      </div>
+      <p className="text-xs text-faint">Toca la animación para saltarla. Los eventos del partido simulado también la disparan.</p>
+    </section>
+  );
+}
+
 export function TestMatch() {
   const [state, dispatch] = useReducer(reducer, undefined, initialState);
   const [auto, setAuto] = useState(false);
   const [speed, setSpeed] = useState(SPEEDS[0].ms);
+  const [resets, setResets] = useState(0); // reiniciar = los ids de eventos vuelven a empezar → se remonta LiveMoments
   const match = useMemo(() => toMatch(state), [state]);
   const live = state.phase === 'first' || state.phase === 'second';
 
@@ -77,7 +98,7 @@ export function TestMatch() {
 
   return (
     <div className="flex flex-col gap-5">
-      {state.lastEvent && <EventBanner key={state.lastEvent.id} event={state.lastEvent} />}
+      <LiveMoments key={resets} match={match} />
 
       <div className="flex flex-col gap-1">
         <h1 className="text-[26px] font-black tracking-tight">Partido de prueba</h1>
@@ -95,7 +116,7 @@ export function TestMatch() {
           {state.phase === 'first' && <Button size="touch" variant="outline" onClick={() => dispatch({ type: 'halftime' })}><Timer /> Medio tiempo</Button>}
           {state.phase === 'half' && <Button size="touch" onClick={() => { dispatch({ type: 'resume' }); setAuto(true); }}><Play /> Segundo tiempo</Button>}
           {(live || state.phase === 'half') && <Button size="touch" variant="outline" onClick={() => dispatch({ type: 'end' })}><Flag /> Final</Button>}
-          <Button size="touch" variant="ghost" onClick={() => { dispatch({ type: 'reset' }); setAuto(false); }}><RefreshCw /> Reiniciar</Button>
+          <Button size="touch" variant="ghost" onClick={() => { dispatch({ type: 'reset' }); setAuto(false); setResets((n) => n + 1); }}><RefreshCw /> Reiniciar</Button>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -120,6 +141,7 @@ export function TestMatch() {
         </div>
       </section>
 
+      <MomentsPanel />
       <MatchClock match={match} />
       <Scoreboard match={match} />
       <PredictionBar match={match} />
