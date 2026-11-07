@@ -23,7 +23,9 @@ export function FeaturedMatch({ match, image }) {
           <div className="flex items-center justify-between gap-3 md:justify-start md:gap-7">
             <div className={team}><TeamCrest team={home} /><span>{home.name}</span></div>
             <div className="text-score-lg leading-none font-black tracking-tight whitespace-nowrap md:text-display">
-              {score[0]}<span className="px-1.5 text-neutral-2 md:px-2.5">–</span>{score[1]}
+              {score
+                ? <>{score[0]}<span className="px-1.5 text-neutral-2 md:px-2.5">–</span>{score[1]}</>
+                : <span className="text-neutral-2">{match.kickoff ?? 'vs'}</span>}
             </div>
             <div className={`${team} items-end text-right md:flex-row-reverse`}><TeamCrest team={away} /><span>{away.name}</span></div>
           </div>

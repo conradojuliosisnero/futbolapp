@@ -12,7 +12,8 @@ export async function generateMetadata({ params }) {
   const { id } = await params;
   const m = await getMatch(id);
   if (!m) return {};
-  return { title: `${m.home.name} ${m.score[0]}–${m.score[1]} ${m.away.name} · ${siteConfig.name}` };
+  const result = m.score ? `${m.score[0]}–${m.score[1]}` : 'vs';
+  return { title: `${m.home.name} ${result} ${m.away.name} · ${siteConfig.name}` };
 }
 
 export default async function MatchPage({ params }) {
