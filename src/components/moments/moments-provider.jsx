@@ -29,6 +29,7 @@ export function MomentsProvider({ children, variant = 'full' }) {
 
   useEffect(() => {
     let alive = true;
+    const queue = pending.current; // misma lista durante toda la vida del proveedor
     let initialMuted = false;
     try { initialMuted = localStorage.getItem(MUTE_KEY) === '1'; } catch { /* sin almacenamiento */ }
     let initialEnabled = true;
@@ -46,7 +47,7 @@ export function MomentsProvider({ children, variant = 'full' }) {
     });
     return () => {
       alive = false;
-      pending.current.splice(0).forEach(([, , , resolve]) => resolve(false));
+      queue.splice(0).forEach(([, , , resolve]) => resolve(false));
       engine.current?.destroy(); engine.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- el motor se crea una sola vez

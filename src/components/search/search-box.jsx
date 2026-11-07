@@ -6,6 +6,7 @@ import { AnimateIcon } from '@animate-ui/react/icons';
 import { Search } from '@/components/animate-ui/icons/search';
 import { LoaderCircle } from '@/components/animate-ui/icons/loader-circle';
 import { TeamCrest } from '@/components/ui/team-crest';
+import { QuickPicks } from './quick-picks';
 import { cn, ENTER, stagger } from '@/lib/utils';
 
 /**
@@ -104,7 +105,7 @@ export function SearchBox({ variant = 'dropdown', autoFocus = false, className }
             onChange={(e) => { setQ(e.target.value); setOpen(true); }}
             onFocus={() => setOpen(true)}
             onKeyDown={onKeyDown}
-            placeholder="Buscar equipos y ligas"
+            placeholder="Busca o elige un equipo"
             role="combobox"
             aria-label="Buscar equipos y ligas"
             aria-controls="search-results"
@@ -114,6 +115,15 @@ export function SearchBox({ variant = 'dropdown', autoFocus = false, className }
         </label>
       </AnimateIcon>
       {showList && list}
+      {/* Sin texto: selección rápida (top 10 de cada liga) */}
+      {showList && short && (
+        <div className={cn(
+          'overflow-hidden',
+          variant === 'dropdown' ? 'absolute inset-x-0 top-[calc(100%+8px)] z-40 max-h-[70vh] overflow-y-auto rounded-2xl bg-popover shadow-2xl ring-1 ring-border animate-in fade-in-0 slide-in-from-top-1 duration-200' : 'rounded-2xl bg-card',
+        )}>
+          <QuickPicks onPick={go} compact={variant === 'dropdown'} />
+        </div>
+      )}
     </div>
   );
 }

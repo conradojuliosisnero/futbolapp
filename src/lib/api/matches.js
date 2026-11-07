@@ -461,8 +461,19 @@ export const getSearchIndex = unstable_cache(async () => {
   const add = (t, l) => { if (t?.id != null && !teams.has(String(t.id))) teams.set(String(t.id), { id: t.id, name: t.name, crest: t.crest, league: l?.name ?? '' }); };
   for (const [l, groups] of groupsByLeague) for (const g of groups) for (const r of g.rows) add(r.team, l);
   for (const m of week) { const l = leagueByCode(m.leagueId); add(m.home, l); add(m.away, l); }
+  // Selección rápida: los 10 primeros de cada liga (con varios grupos, se ordenan juntos por puntos y diferencia de gol).
+  const top = groupsByLeague.map(([l, groups]) => {
+    const rows = groups.length > 1
+      ? groups.flatMap((g) => g.rows).sort((a, b) => b.pts - a.pts || b.gd - a.gd)
+      : groups[0]?.rows ?? [];
+    const pick = rows.length
+      ? rows.slice(0, 10).map((r) => r.team)
+      : week.filter((m) => m.leagueId === l.code).flatMap((m) => [m.home, m.away]).filter((t, i, a) => a.findIndex((x) => x.id === t.id) === i).slice(0, 10);
+    return { code: l.code, name: l.name, emblem: leagueEmblem(l.code), teams: pick.map((t) => ({ id: t.id, name: t.name, crest: t.crest })) };
+  }).filter((g) => g.teams.length);
   return {
     leagues: LEAGUES.map((l) => ({ code: l.code, name: l.name, country: l.country, emblem: leagueEmblem(l.code) })),
     teams: [...teams.values()],
+    top,
   };
-}, ['search-index-v1'], { revalidate: 21600 });
+}, ['search-index-v2'], { revalidate: 21600 });

@@ -4,7 +4,13 @@ import { getSearchIndex } from '@/lib/api/matches';
 const norm = (s = '') => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 export async function GET(request) {
-  const q = norm(new URL(request.url).searchParams.get('q') ?? '').trim().slice(0, 50);
+  const params = new URL(request.url).searchParams;
+  // ?top=1 → selección rápida: los 10 mejores equipos de cada liga.
+  if (params.get('top')) {
+    const { top } = await getSearchIndex();
+    return Response.json({ top }, { headers: { 'Cache-Control': 'public, max-age=1800' } });
+  }
+  const q = norm(params.get('q') ?? '').trim().slice(0, 50);
   if (q.length < 2) return Response.json({ leagues: [], teams: [] });
 
   const { leagues, teams } = await getSearchIndex();
