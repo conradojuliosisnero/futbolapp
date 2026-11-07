@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/ui/logo';
 import { signIn, signUp, signInWithGoogle, authErrorMessage } from '@/lib/firebase/auth';
+import { firebaseReady } from '@/lib/firebase/client';
 
 function Field({ label, ...props }) {
   return (
@@ -35,6 +37,19 @@ export function LoginForm({ redirectTo = '/' }) {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.currentTarget));
     run(() => (isRegister ? signUp(f) : signIn(f)));
+  }
+
+  if (!firebaseReady) {
+    return (
+      <div className="mx-auto flex w-full max-w-100 flex-col gap-5 rounded-2xl bg-card px-6 py-8">
+        <Logo />
+        <h1 className="text-[22px] font-black tracking-tight">Login no disponible todavía</h1>
+        <p className="text-sm text-muted-foreground">
+          La app está en modo de prueba. El inicio de sesión se activa al agregar las credenciales de Firebase en <code>.env.local</code>.
+        </p>
+        <Button asChild size="touch"><Link href="/">Volver al inicio</Link></Button>
+      </div>
+    );
   }
 
   return (

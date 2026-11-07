@@ -13,7 +13,7 @@ npm run dev
 ## Firebase (login y datos de usuario)
 
 1. En Firebase Console activa **Authentication → Correo/contraseña** y **Google**, y crea **Firestore**.
-2. Copia `.env.example` a `.env.local` y llena los valores de tu app web. Sin esto `/entrar` y el build fallan.
+2. Copia `.env.example` a `.env.local` y llena los valores de tu app web. Sin esto la app corre en modo de prueba: partidos de `lib/mocks` y login desactivado.
 3. Publica las reglas: `npx firebase-tools deploy --only firestore:rules`.
 
 La estructura de la base de datos está documentada al inicio de `firestore.rules`.
