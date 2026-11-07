@@ -7,7 +7,8 @@ rules_version = '2';
 //   email: string
 //   photoURL: string | null
 //   createdAt: timestamp
-//   favoriteTeam: { id, name, crest } | null          equipo de "Mi equipo"
+//   favoriteTeam: { id, name, crest, league } | null  equipo de "Mi equipo" (también está en favorites)
+//   favorites: { [teamId]: { name, crest, league, addedAt } }   equipos favoritos (máx. 50); de ellos llegan los avisos
 //   notify: { goals, kickoff, final, redCards, reminders, teamNews: bool }   qué avisos quiere
 //   follows: {
 //     teams:   { [apiTeamId]:   { name, crest } },
@@ -45,12 +46,13 @@ service cloud.firestore {
     match /users/{uid} {
       allow read, delete: if isOwner(uid);
       allow create: if isOwner(uid)
-        && request.resource.data.keys().hasOnly(['displayName', 'email', 'photoURL', 'follows', 'favoriteTeam', 'notify', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['displayName', 'email', 'photoURL', 'follows', 'favoriteTeam', 'favorites', 'notify', 'createdAt'])
         && request.resource.data.email == request.auth.token.email
         && request.resource.data.createdAt == request.time;
       allow update: if isOwner(uid)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL', 'follows', 'favoriteTeam', 'notify'])
-        && request.resource.data.follows is map;
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL', 'follows', 'favoriteTeam', 'favorites', 'notify'])
+        && request.resource.data.follows is map
+        && (!('favorites' in request.resource.data) || (request.resource.data.favorites is map && request.resource.data.favorites.size() <= 50));
 
       match /pushSubscriptions/{id} {
         allow read, delete: if isOwner(uid);

@@ -8,6 +8,7 @@ import { PlayerAvatar } from '@/components/ui/player-avatar';
 import { AnimatedLink } from '@/components/ui/animated-link';
 import { NewsList } from '@/components/news/news-list';
 import { FavoriteTeamButton } from './favorite-team-button';
+import { FavoriteStar } from '@/components/favorites/favorite-star';
 import { cn, ENTER, stagger } from '@/lib/utils';
 
 function MatchSection({ title, matches, empty }) {
@@ -75,7 +76,10 @@ export function TeamView({ data, note, news = [] }) {
               </Eyebrow>
             )}
             <h1 className="text-[26px] leading-none font-black tracking-tight md:text-[32px]">{team.name}</h1>
-            <div className="pt-1"><FavoriteTeamButton team={{ id: team.id, name: team.name, crest: team.crest, league: league?.id ?? null }} /></div>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <FavoriteStar team={{ id: team.id, name: team.name, crest: team.crest, league: league?.id ?? null }} />
+              <FavoriteTeamButton team={{ id: team.id, name: team.name, crest: team.crest, league: league?.id ?? null }} />
+            </div>
           </div>
         </div>
         {stats.length > 0 && (

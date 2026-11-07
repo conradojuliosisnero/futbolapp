@@ -59,3 +59,29 @@ const DEFAULT_PREFS = { goals: true, kickoff: true, final: true, redCards: false
 
 /** ¿El usuario quiere este tipo de aviso? (si nunca guardó preferencias, se usan las de por defecto) */
 export const wants = (notify, pref) => ({ ...DEFAULT_PREFS, ...(notify ?? {}) })[pref] !== false;
+
+/**
+ * Agrupa usuarios por equipo seguido ("mi equipo" + favoritos), sin repetir usuario dentro de un equipo.
+ * users: [{ uid, favoriteTeam, favorites: { [teamId]: { name, crest, league } }, notify }]
+ * → Map teamId → { team: { id, name, crest, league }, users: [{ uid, notify }] }
+ */
+export function groupUsersByTeam(users) {
+  const byTeam = new Map();
+  const add = (id, info, u) => {
+    const key = String(id);
+    if (!byTeam.has(key)) byTeam.set(key, { team: { id: key, name: info.name, crest: info.crest ?? null, league: info.league ?? null }, users: new Map() });
+    byTeam.get(key).users.set(u.uid, { uid: u.uid, notify: u.notify });
+  };
+  for (const u of users) {
+    if (u.favoriteTeam?.id) add(u.favoriteTeam.id, u.favoriteTeam, u);
+    for (const [id, info] of Object.entries(u.favorites ?? {})) if (info?.name) add(id, info, u);
+  }
+  return new Map([...byTeam].map(([k, v]) => [k, { team: v.team, users: [...v.users.values()] }]));
+}
+
+/** Usuarios a avisar de un partido: los de ambos equipos, sin duplicar a quien sigue a los dos. */
+export function usersForMatch(byTeam, match) {
+  const all = new Map();
+  for (const id of [match.home.id, match.away.id]) for (const u of byTeam.get(String(id))?.users ?? []) all.set(u.uid, u);
+  return [...all.values()];
+}

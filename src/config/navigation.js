@@ -5,7 +5,6 @@ import { Trophy } from '@/components/animate-ui/icons/trophy';
 import { Star } from '@/components/animate-ui/icons/star';
 import { Bell } from '@/components/animate-ui/icons/bell';
 import { Newspaper } from 'lucide-react';
-import { DEFAULT_TEAM, LEAGUES, leagueEmblem } from '@/config/leagues';
 
 // Iconos animados de Animate UI: se mueven al pasar el cursor/tocar el ítem y al llegar a la sección.
 
@@ -18,12 +17,6 @@ export const NAV_ITEMS = [
   { id: 'mi-equipo', label: 'Mi equipo', href: '/mi-equipo', icon: Star, mobile: true },
   { id: 'noticias', label: 'Noticias', href: '/noticias', icon: Newspaper, mobile: true },
   { id: 'notificaciones', label: 'Notificaciones', href: '/notificaciones', icon: Bell },
-];
-
-// shortcut: lo que sigue el usuario es fijo hasta tener login (luego sale de users/{uid}.follows).
-export const FOLLOWING = [
-  { id: `team-${DEFAULT_TEAM.id}`, type: 'team', label: DEFAULT_TEAM.name, href: '/mi-equipo', crest: `https://crests.football-data.org/${DEFAULT_TEAM.id}.png` },
-  { id: `league-${DEFAULT_TEAM.league}`, type: 'league', label: LEAGUES.find((l) => l.code === DEFAULT_TEAM.league)?.name, href: `/ligas/${DEFAULT_TEAM.league}`, crest: leagueEmblem(DEFAULT_TEAM.league) },
 ];
 
 export const HOME_FILTERS = [

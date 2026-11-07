@@ -63,7 +63,7 @@ Las consultas se hacen en el servidor y su caché la comparten todos los usuario
 
 Sin librerías extra a propósito: los datos de la API se piden con `fetch` nativo desde el servidor
 (route handlers / server components) usando la caché de Next (`revalidate`), así la API key nunca llega al navegador.
-Rutas: `/` (Inicio), `/partidos`, `/partido/[id]`, `/ligas`, `/ligas/[id]`, `/equipo/[id]`, `/jugador/[id]`, `/mi-equipo`, `/noticias`, `/buscar`, `/notificaciones`, `/perfil`, `/entrar` y `/prueba` (solo desarrollo).
+Rutas: `/` (Inicio), `/favoritos`, `/partidos`, `/partido/[id]`, `/ligas`, `/ligas/[id]`, `/equipo/[id]`, `/jugador/[id]`, `/mi-equipo`, `/noticias`, `/buscar`, `/notificaciones`, `/perfil`, `/entrar` y `/prueba` (solo desarrollo).
 Pantallas de estado: `app/loading.js` (skeleton), `app/error.js`, `app/global-error.js` y `app/not-found.js` (404).
 
 ## Estructura
@@ -122,7 +122,8 @@ Breakpoints: `md` = 768px (tablet) y `xl` = 1200px (escritorio).
 
 - **Bandeja** (`/notificaciones`): los avisos de tu cuenta, en tiempo real (Firestore).
 - **Ajustes**: qué avisos quieres (goles, inicio, final, rojas, recordatorios, noticias de tu equipo) y activar push en el dispositivo.
-- **Mi equipo**: en la página de cualquier equipo toca **Hacer mi equipo**; de ese equipo llegan los avisos.
+- **Favoritos** (`/favoritos`): en la página de cualquier equipo toca la ★ **Agregar a favoritos** (máx. 50). De tus favoritos llegan los avisos.
+  **Hacer mi equipo** elige el principal (el de `/mi-equipo`) y también lo agrega a favoritos.
 - **iPhone:** push solo con iOS 16.4+ y la app instalada (Compartir → Agregar a inicio).
 
 ### Avisos automáticos (goles, rojas, inicio, final y noticias de tu equipo)

@@ -71,6 +71,7 @@ export function UserMenu({ variant = 'icon', side = 'bottom', align = 'end' }) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild className={item}><Link href="/perfil"><UserRound /> Ver perfil</Link></DropdownMenuItem>
+            <DropdownMenuItem asChild className={item}><Link href="/favoritos"><Star /> Favoritos</Link></DropdownMenuItem>
             <DropdownMenuItem asChild className={item}><Link href="/mi-equipo"><Star /> Mi equipo</Link></DropdownMenuItem>
             <DropdownMenuItem asChild className={item}><Link href="/notificaciones"><Bell /> Notificaciones</Link></DropdownMenuItem>
             <DropdownMenuSeparator />

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { matchNotifications, newsNotifications, wants, eventKey } from './engine.mjs';
+import { matchNotifications, newsNotifications, wants, eventKey, groupUsersByTeam, usersForMatch } from './engine.mjs';
 
 const base = {
   id: 'col.1-1', league: 'Liga BetPlay', status: 'live',
@@ -54,4 +54,24 @@ test('preferencias: por defecto sí (menos rojas); lo que el usuario apaga, no',
   assert.equal(wants(undefined, 'redCards'), false);
   assert.equal(wants({ goals: false }, 'goals'), false);
   assert.equal(wants({ teamNews: true }, 'teamNews'), true);
+});
+
+
+test('agrupa por equipo: "mi equipo" + favoritos, sin repetir usuario', () => {
+  const users = [
+    { uid: 'a', favoriteTeam: { id: 'col.1-5264', name: 'Atl. Nacional' }, favorites: { 'col.1-5264': { name: 'Atl. Nacional' }, '86': { name: 'Real Madrid' } } },
+    { uid: 'b', favorites: { '86': { name: 'Real Madrid' } }, notify: { goals: false } },
+    { uid: 'c' },
+  ];
+  const by = groupUsersByTeam(users);
+  assert.deepEqual([...by.keys()].sort(), ['86', 'col.1-5264']);
+  assert.deepEqual(by.get('col.1-5264').users.map((u) => u.uid), ['a']); // "a" está una sola vez aunque sea mi equipo y favorito
+  assert.deepEqual(by.get('86').users.map((u) => u.uid).sort(), ['a', 'b']);
+  assert.deepEqual(by.get('86').users.find((u) => u.uid === 'b').notify, { goals: false });
+});
+
+test('partido entre dos favoritos del mismo usuario: se le avisa una sola vez', () => {
+  const by = groupUsersByTeam([{ uid: 'a', favorites: { '86': { name: 'Real Madrid' }, '81': { name: 'Barça' } } }, { uid: 'b', favorites: { '81': { name: 'Barça' } } }]);
+  const users = usersForMatch(by, { home: { id: 86 }, away: { id: 81 } });
+  assert.deepEqual(users.map((u) => u.uid).sort(), ['a', 'b']);
 });

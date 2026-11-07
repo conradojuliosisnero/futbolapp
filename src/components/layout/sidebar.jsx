@@ -1,12 +1,11 @@
 import Link from 'next/link';
-import { NAV_ITEMS, FOLLOWING } from '@/config/navigation';
+import { NAV_ITEMS } from '@/config/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Logo } from '@/components/ui/logo';
-import { TeamCrest } from '@/components/ui/team-crest';
-import { Eyebrow } from '@/components/ui/eyebrow';
 import { InstallCard } from '@/components/pwa/install-card';
 import { AnimatedLink } from '@/components/ui/animated-link';
 import { UserMenu } from '@/components/auth/user-menu';
+import { FavoritesNav } from '@/components/favorites/favorites-list';
 import { cn } from '@/lib/utils';
 
 export function Sidebar({ active, counts = {} }) {
@@ -44,14 +43,7 @@ export function Sidebar({ active, counts = {} }) {
         })}
       </ul>
 
-      <div className="hidden flex-col gap-1.5 xl:flex">
-        <div className="px-3.5 pb-1"><Eyebrow>Siguiendo</Eyebrow></div>
-        {FOLLOWING.map((f) => (
-          <Link key={f.id} href={f.href} className="flex items-center gap-2.5 px-3.5 py-1.5 text-sm font-semibold">
-            <TeamCrest team={{ name: f.label, crest: f.crest }} size="sm" />{f.label}
-          </Link>
-        ))}
-      </div>
+      <FavoritesNav />
 
       <div className="mt-auto hidden xl:flex"><InstallCard /></div>
       <div className="mt-auto w-full xl:mt-0"><UserMenu variant="full" side="right" align="end" /></div>

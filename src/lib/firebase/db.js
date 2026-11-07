@@ -1,20 +1,10 @@
 // Datos del usuario en Firestore. Los partidos/ligas vienen de la API de fútbol, aquí solo sus ids.
 // Estructura completa en firestore.rules (comentario de cabecera).
 import {
-  doc, setDoc, updateDoc, deleteDoc, deleteField, serverTimestamp, onSnapshot,
+  doc, setDoc, updateDoc, deleteDoc, deleteField, serverTimestamp, onSnapshot, FieldPath,
   collection, query, where, orderBy, limit, getCountFromServer,
 } from 'firebase/firestore';
 import { db } from './client';
-
-// kind: 'teams' | 'leagues' | 'matches'. item: { id, name, crest? } con el id de la API.
-export function follow(uid, kind, item) {
-  return updateDoc(doc(db, 'users', uid), {
-    [`follows.${kind}.${item.id}`]: { name: item.name, crest: item.crest ?? null },
-  });
-}
-export function unfollow(uid, kind, id) {
-  return updateDoc(doc(db, 'users', uid), { [`follows.${kind}.${id}`]: deleteField() });
-}
 
 // Un voto por usuario y partido (el id del doc es el uid, así no se puede votar dos veces).
 export function vote(uid, matchId, pick) {
@@ -32,11 +22,27 @@ export async function getVotes(matchId) {
 
 // ---------- mi equipo, avisos y dispositivos ----------
 
-/** Equipo de "Mi equipo" (también lo usa el servidor para saber a quién avisar). team: { id, name, crest, league } */
+const teamInfo = (team) => ({ name: team.name, crest: team.crest ?? null, league: team.league ?? null });
+
+/** Equipo de "Mi equipo" (también lo usa el servidor para saber a quién avisar). También queda en favoritos. */
 export function setFavoriteTeam(uid, team) {
-  return updateDoc(doc(db, 'users', uid), {
-    favoriteTeam: { id: String(team.id), name: team.name, crest: team.crest ?? null, league: team.league ?? null },
-  });
+  return updateDoc(
+    doc(db, 'users', uid),
+    'favoriteTeam', { id: String(team.id), ...teamInfo(team) },
+    // FieldPath: los ids de ESPN llevan punto ("col.1-5264") y con texto Firestore lo tomaría como subcampo.
+    new FieldPath('favorites', String(team.id)), { ...teamInfo(team), addedAt: serverTimestamp() },
+  );
+}
+
+/** Agrega un equipo a favoritos. team: { id, name, crest, league } */
+export function addFavorite(uid, team) {
+  return updateDoc(doc(db, 'users', uid), new FieldPath('favorites', String(team.id)), { ...teamInfo(team), addedAt: serverTimestamp() });
+}
+
+/** Quita un equipo de favoritos (si era "Mi equipo", también deja de serlo). */
+export function removeFavorite(uid, teamId, { wasMyTeam = false } = {}) {
+  const extra = wasMyTeam ? ['favoriteTeam', null] : [];
+  return updateDoc(doc(db, 'users', uid), new FieldPath('favorites', String(teamId)), deleteField(), ...extra);
 }
 
 /** Qué avisos quiere el usuario. prefs: { goals, kickoff, final, redCards, reminders, teamNews } */

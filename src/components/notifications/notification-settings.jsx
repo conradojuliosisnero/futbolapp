@@ -119,9 +119,9 @@ export function NotificationSettings() {
   return (
     <div className="flex flex-col gap-4">
       <PushCard uid={user?.uid} />
-      {user && !profile?.favoriteTeam && profile !== undefined && (
+      {user && !profile?.favoriteTeam && !Object.keys(profile?.favorites ?? {}).length && profile !== undefined && (
         <p className="rounded-2xl bg-secondary p-4 text-md text-muted-foreground">
-          Para recibir avisos de goles y noticias, abre la página de tu equipo y toca <b className="text-foreground">Hacer mi equipo</b>.
+          Para recibir avisos de goles y noticias, abre la página de tus equipos y márcalos como <b className="text-foreground">Favorito</b>.
         </p>
       )}
       <div className="flex flex-col rounded-3xl bg-card px-5">
