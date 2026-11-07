@@ -24,7 +24,7 @@ export async function POST(request) {
   setVapidDetails(subject || 'mailto:soporte@futbolapp.app', pub, priv);
   try {
     await sendNotification(body.subscription, JSON.stringify({
-      title: 'Futbolapp · notificación de prueba',
+      title: 'Minuto 90 · notificación de prueba',
       body: 'Así te avisaremos de los goles de tus equipos.',
       url: '/partidos',
       tag: 'test',

@@ -8,7 +8,7 @@ rules_version = '2';
 //   photoURL: string | null
 //   createdAt: timestamp
 //   favoriteTeam: { id, name, crest } | null          equipo de "Mi equipo"
-//   notify: { goals, kickoff, final, redCards, reminders: bool }   qué avisos quiere
+//   notify: { goals, kickoff, final, redCards, reminders, teamNews: bool }   qué avisos quiere
 //   follows: {
 //     teams:   { [apiTeamId]:   { name, crest } },
 //     leagues: { [apiLeagueId]: { name, crest } },
@@ -22,7 +22,7 @@ rules_version = '2';
 //   createdAt: timestamp
 //
 // users/{uid}/notifications/{id}      bandeja de avisos (la escribe solo el servidor)
-//   type: 'goal' | 'card' | 'kickoff' | 'final' | 'reminder'
+//   type: 'goal' | 'card' | 'kickoff' | 'final' | 'reminder' | 'news'
 //   title, text, url: string
 //   read: bool
 //   createdAt: timestamp

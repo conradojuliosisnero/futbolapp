@@ -23,9 +23,8 @@ export function Scoreboard({ match }) {
       <Side team={match.home} />
       <div className="flex flex-col items-center gap-0.5">
         {match.score
-          ? <div className="text-score leading-none font-black md:text-5xl">{match.score[0]} – {match.score[1]}</div>
-          : <div className="text-score leading-none font-black text-subtle md:text-5xl">{match.kickoff ?? 'vs'}</div>}
-        {match.clock && <div className="text-xs font-semibold text-primary md:text-md">{match.clock}</div>}
+          ? <div key={match.score.join('-')} className="text-score leading-none font-black tabular-nums md:text-5xl animate-in zoom-in-90 duration-300 motion-reduce:animate-none">{match.score[0]} – {match.score[1]}</div>
+          : <div className="text-3xl leading-none font-black text-subtle md:text-4xl">vs</div>}
       </div>
       <Side team={match.away} reverse />
     </div>

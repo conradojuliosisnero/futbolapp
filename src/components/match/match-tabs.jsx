@@ -5,6 +5,20 @@ import { SplitBar } from '@/components/ui/split-bar';
 import { Media } from '@/components/ui/media';
 import { cn, ENTER, stagger } from '@/lib/utils';
 
+/** Relato minuto a minuto (ESPN, en español). */
+function Commentary({ items }) {
+  return (
+    <ol className="flex flex-col">
+      {items.map((c, i) => (
+        <li key={i} style={stagger(i)} className={cn(ENTER, 'grid grid-cols-[44px_1fr] gap-3 border-b py-3 last:border-b-0')}>
+          <span className="text-sm font-bold text-subtle">{c.min}</span>
+          <p className="text-sm leading-snug text-muted-foreground">{c.text}</p>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 function Timeline({ events = [] }) {
   return (
     <ol>
@@ -64,6 +78,7 @@ export function MatchTabs({ match, defaultTab = 'events' }) {
       defaultValue={defaultTab}
       items={[
         { value: 'events', label: 'Jugadas', content: match.events?.length ? <Timeline events={match.events} /> : empty },
+        ...(match.commentary?.length ? [{ value: 'commentary', label: 'Relato', content: <Commentary items={match.commentary} /> }] : []),
         { value: 'stats', label: 'Estadísticas', content: match.stats?.length ? <StatsList stats={match.stats} /> : note(match.status === 'scheduled' ? 'El partido aún no empieza.' : 'Estadísticas no disponibles para este partido.') },
         { value: 'lineups', label: 'Alineación', content: <Lineups match={match} /> },
       ]}

@@ -6,6 +6,7 @@ import { StandingsTable, FormGuide } from '@/components/league/standings-table';
 import { MatchRow } from '@/components/match/match-list';
 import { PlayerAvatar } from '@/components/ui/player-avatar';
 import { AnimatedLink } from '@/components/ui/animated-link';
+import { NewsList } from '@/components/news/news-list';
 import { cn, ENTER, stagger } from '@/lib/utils';
 
 function MatchSection({ title, matches, empty }) {
@@ -55,7 +56,7 @@ function Squad({ squad, teamId }) {
 }
 
 /** Ficha completa de un equipo: datos, forma, partidos, plantilla y tabla. */
-export function TeamView({ data, note }) {
+export function TeamView({ data, note, news = [] }) {
   const { team, league, position, standing: s, form, standings, live, upcoming, results, squad } = data;
   const facts = [['Fundado', team.founded], ['Estadio', team.venue], ['Entrenador', team.coach], ['Colores', team.colors]].filter(([, v]) => v);
   const stats = s ? [['PJ', s.played], ['G', s.won], ['E', s.drawn], ['P', s.lost], ['Pts', s.pts]] : [];
@@ -114,6 +115,7 @@ export function TeamView({ data, note }) {
               </div>
             ),
           },
+          ...(news.length ? [{ value: 'news', label: 'Noticias', content: <NewsList items={news} featuredFirst={false} /> }] : []),
           { value: 'squad', label: 'Plantilla', content: <Squad squad={squad} teamId={team.id} /> },
           {
             value: 'table',

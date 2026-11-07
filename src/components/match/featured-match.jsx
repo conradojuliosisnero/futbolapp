@@ -13,7 +13,16 @@ export function FeaturedMatch({ match, image }) {
 
   return (
     <article className="relative h-80 overflow-hidden rounded-4xl md:h-110">
-      <Media src={image} label="imagen de estadio / jugada" className="absolute inset-0" />
+      <Media src={image} className="absolute inset-0" />
+      {/* Sin foto del partido: los escudos grandes y difuminados de fondo */}
+      {!image && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-between px-[8%] opacity-25 blur-[2px]" aria-hidden>
+          {[home, away].map((t) => t.crest && (
+            // eslint-disable-next-line @next/next/no-img-element -- escudo externo
+            <img key={t.id ?? t.name} src={t.crest} alt="" className="size-40 object-contain md:size-56" />
+          ))}
+        </div>
+      )}
       <div className="absolute inset-0 bg-linear-to-b from-transparent from-25% to-overlay" />
       {match.status === 'live' && <div className="absolute top-3.5 right-3.5 md:top-5 md:right-5"><LiveBadge>{match.minute}</LiveBadge></div>}
 

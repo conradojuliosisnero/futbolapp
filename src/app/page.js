@@ -3,14 +3,15 @@ import { AppShell } from '@/components/layout/app-shell';
 import { AutoRefresh } from '@/components/layout/auto-refresh';
 import { TopBar } from '@/components/layout/top-bar';
 import { FeaturedMatch } from '@/components/match/featured-match';
-import { HighlightsGrid } from '@/components/match/highlights-grid';
+import { SectionHeader } from '@/components/ui/section-header';
+import { NewsList } from '@/components/news/news-list';
 import { MatchList } from '@/components/match/match-list';
 import { StatusScreen } from '@/components/ui/status-screen';
-import { getFeaturedMatch, getHighlights, getTodayByLeague, getLiveCount, todayLabel } from '@/lib/api/matches';
+import { getFeaturedMatch, getNews, getTodayByLeague, getLiveCount, todayLabel } from '@/lib/api/matches';
 
 export default async function HomePage() {
-  const [featured, highlights, groups, liveCount] = await Promise.all([
-    getFeaturedMatch(), getHighlights(), getTodayByLeague(), getLiveCount(),
+  const [featured, news, groups, liveCount] = await Promise.all([
+    getFeaturedMatch(), getNews(), getTodayByLeague(), getLiveCount(),
   ]);
 
   return (
@@ -27,7 +28,12 @@ export default async function HomePage() {
         {featured
           ? <FeaturedMatch match={featured} />
           : <StatusScreen icon={CalendarDays} title="Sin partidos" text="No hay partidos esta semana en las ligas configuradas." />}
-        {highlights.length > 0 && <HighlightsGrid title="Resúmenes y goles" items={highlights} />}
+        {news.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <SectionHeader title="Noticias" action={{ href: '/noticias', label: 'Ver todas' }} />
+            <NewsList items={news.slice(0, 5)} />
+          </section>
+        )}
       </div>
     </AppShell>
   );

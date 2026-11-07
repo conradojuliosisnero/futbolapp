@@ -1,7 +1,27 @@
-# Futbolapp — PWA de fútbol
+# Minuto 90 — PWA de fútbol
 
 Next.js 16 (App Router) · React 19 · JavaScript (sin TypeScript) · Tailwind CSS v4 · shadcn/ui · Animate UI.
 Interfaz "Estadio nocturno", responsive móvil / tablet / escritorio.
+
+## Capturas
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/inicio-movil.png" width="200" alt="Inicio en el celular"><br><sub>Inicio</sub></td>
+    <td align="center"><img src="docs/screenshots/partido-movil.png" width="200" alt="Partido en vivo con el minuto en grande"><br><sub>Partido en vivo</sub></td>
+    <td align="center"><img src="docs/screenshots/liga-colombia-movil.png" width="200" alt="Tabla de la Liga BetPlay"><br><sub>Liga BetPlay</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/equipo-movil.png" width="200" alt="Página de equipo: Atlético Nacional"><br><sub>Equipo</sub></td>
+    <td align="center"><img src="docs/screenshots/noticias-movil.png" width="200" alt="Noticias en español"><br><sub>Noticias</sub></td>
+    <td></td>
+  </tr>
+</table>
+
+<img src="docs/screenshots/inicio-escritorio.png" alt="Inicio en escritorio" width="100%">
+<img src="docs/screenshots/partido-escritorio.png" alt="Partido en escritorio" width="100%">
+
+Las capturas se toman con la app corriendo (`npm run build && npm start`) y un navegador sin interfaz que emula un iPhone (390 px).
 
 ## Arrancar
 Requiere Node 20.9 o superior.
@@ -19,6 +39,16 @@ npm run dev
 La estructura de la base de datos está documentada al inicio de `firestore.rules`.
 Código en `src/lib/firebase/` (`auth.js`, `db.js`, `useUser.js`); pantalla de login en `/entrar`.
 
+## Fuentes de datos
+
+| Fuente | Para qué | Límite | Caché |
+|---|---|---|---|
+| **football-data.org** (oficial, gratis) | Ligas europeas, Libertadores y Brasileirão: partidos, tablas, goleadores, equipos | 10 consultas/min | partidos 1 min · tablas 1 h · equipos 1 día |
+| **ESPN** (no oficial, sin clave) | Liga BetPlay, Argentina, Liga MX y MLS; minuto real; relato, eventos, estadísticas y alineaciones; noticias en español | No publicado | hoy 1 min · pasados 1 h · noticias 15 min |
+| **API-Football** (oficial, gratis) | Respaldo del detalle de partido; plantillas con fotos; perfil de jugador | 100 consultas/día | 15 min a 30 días según el dato |
+
+Las consultas se hacen en el servidor y su caché la comparten todos los usuarios. ESPN puede cambiar sin aviso: si falla, la app sigue con las otras dos.
+
 ## Dependencias
 | Paquete | Tipo | Para qué |
 |---|---|---|
@@ -33,7 +63,7 @@ Código en `src/lib/firebase/` (`auth.js`, `db.js`, `useUser.js`); pantalla de l
 
 Sin librerías extra a propósito: los datos de la API se piden con `fetch` nativo desde el servidor
 (route handlers / server components) usando la caché de Next (`revalidate`), así la API key nunca llega al navegador.
-Rutas: `/` (Inicio), `/partidos`, `/ligas`, `/ligas/[id]`, `/mi-equipo`, `/partido/[id]`, `/notificaciones`, `/perfil` y `/entrar`.
+Rutas: `/` (Inicio), `/partidos`, `/partido/[id]`, `/ligas`, `/ligas/[id]`, `/equipo/[id]`, `/jugador/[id]`, `/mi-equipo`, `/noticias`, `/buscar`, `/notificaciones`, `/perfil`, `/entrar` y `/prueba` (solo desarrollo).
 Pantallas de estado: `app/loading.js` (skeleton), `app/error.js`, `app/global-error.js` y `app/not-found.js` (404).
 
 ## Estructura
@@ -106,7 +136,21 @@ El modo automático corre el reloj (1 minuto de juego = 1 s, 0,5 s o 0,2 s) y ge
 Usa los mismos componentes que un partido real, así que toda animación nueva se ve aquí.
 En producción da 404 salvo que definas `ENABLE_TEST_MATCH=1`. Motor y pruebas: `src/components/test-match/`.
 
+## Desplegar (Vercel) y probar en el celular
+
+1. En [vercel.com](https://vercel.com) → **Add New → Project** → importa el repo `futbolapp`. Detecta Next.js solo.
+2. En **Environment Variables** agrega las mismas variables de tu `.env` y `.env.local`:
+   `API_FOTBALL_API_KEY`, `API_FOTBALL_API_HOST`, `API_DATA_API_KEY`, `API_DATA_API_HEADER`,
+   las 7 `NEXT_PUBLIC_FIREBASE_*`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`.
+   (Opcional: `ENABLE_TEST_MATCH=1` para abrir `/prueba` en producción.)
+3. **Deploy**. Cada `git push` a `main` vuelve a desplegar.
+4. En Firebase → **Authentication → Configuración → Dominios autorizados**, agrega tu dominio de Vercel (`tu-app.vercel.app`); si no, el login con Google falla.
+5. Publica las reglas de Firestore (ver la sección Firebase).
+6. En el teléfono abre la URL de Vercel:
+   - **Android (Chrome):** menú ⋮ → **Instalar app**.
+   - **iPhone (Safari):** Compartir → **Agregar a inicio**, y ábrela desde el ícono (así funcionan las notificaciones).
+
 ## PWA
 - `app/manifest.js` genera `/manifest.webmanifest`.
-- Agrega `public/icons/icon-192.png` e `icon-512.png`.
+- Iconos generados por código: `app/pwa-icon/[size]` (192, 512 y maskable) y `app/apple-icon.js` (iOS). Usan `logoMark` de `config/site.js`.
 - El service worker solo se registra en producción (`npm run build && npm start`).

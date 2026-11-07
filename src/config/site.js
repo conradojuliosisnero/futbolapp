@@ -1,8 +1,8 @@
 export const siteConfig = {
-  name: 'Futbolapp',
-  shortName: 'Futbolapp',
-  logoMark: 'f',
-  tagline: 'Fútbol en vivo',
+  name: 'Minuto 90',
+  shortName: 'Minuto 90',
+  logoMark: 'M',
+  tagline: 'Partidos en vivo, resultados y resúmenes.',
   description: 'Partidos en vivo, resultados y resúmenes.',
   locale: 'es',
   timeZone: 'America/Bogota', // horas de los partidos

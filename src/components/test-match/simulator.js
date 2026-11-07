@@ -123,6 +123,8 @@ export function toMatch(s) {
     clock: minute,
     progress: Math.min(1, s.minute / 90),
     kickoff: 'Ahora',
+    utc: Date.now(),
+    day: 'Hoy',
     label: minute ?? (s.phase === 'finished' ? 'Final' : 'Ahora'),
     home: HOME,
     away: AWAY,

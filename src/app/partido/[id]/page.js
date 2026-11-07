@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
 import { AutoRefresh } from '@/components/layout/auto-refresh';
-import { VideoPlayer } from '@/components/match/video-player';
+import { MatchClock } from '@/components/match/match-clock';
 import { Scoreboard } from '@/components/match/scoreboard';
 import { PredictionBar } from '@/components/match/prediction-bar';
 import { MatchTabs } from '@/components/match/match-tabs';
@@ -27,7 +27,7 @@ export default async function MatchPage({ params }) {
       <AutoRefresh enabled={match.status === 'live'} />
       <div className="flex flex-col gap-5">
         <Link href={`/ligas/${match.leagueId}`} className="text-sm font-medium text-subtle">← {match.league}{match.round && ` · ${match.round}`}</Link>
-        <VideoPlayer live={match.status === 'live'} progress={match.progress} />
+        <MatchClock match={match} />
         <Scoreboard match={match} />
         {match.prediction && <PredictionBar match={match} />}
       </div>

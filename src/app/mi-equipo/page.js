@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { AppShell } from '@/components/layout/app-shell';
 import { AutoRefresh } from '@/components/layout/auto-refresh';
 import { TeamView } from '@/components/team/team-view';
-import { getTeamPage, getLiveCount } from '@/lib/api/matches';
+import { getTeamPage, getTeamNews, getLiveCount } from '@/lib/api/matches';
 import { DEFAULT_TEAM } from '@/config/leagues';
 import { siteConfig } from '@/config/site';
 
@@ -17,6 +17,7 @@ export default async function MyTeamPage() {
           <AutoRefresh enabled={data.live.length > 0} />
           <TeamView
             data={data}
+            news={await getTeamNews(data.team.name, data.league?.id)}
             note={(
               <p className="text-center text-xs text-faint">
                 Equipo por defecto. Podrás elegir el tuyo al <Link href="/entrar" className="text-primary">iniciar sesión</Link>.

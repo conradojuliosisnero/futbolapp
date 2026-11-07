@@ -7,7 +7,7 @@ import { RefreshCw } from '@/components/animate-ui/icons/refresh-cw';
 import { Flag } from '@/components/animate-ui/icons/flag';
 import { Timer } from '@/components/animate-ui/icons/timer';
 import { Button } from '@/components/ui/button';
-import { VideoPlayer } from '@/components/match/video-player';
+import { MatchClock } from '@/components/match/match-clock';
 import { Scoreboard } from '@/components/match/scoreboard';
 import { PredictionBar } from '@/components/match/prediction-bar';
 import { MatchTabs } from '@/components/match/match-tabs';
@@ -120,7 +120,7 @@ export function TestMatch() {
         </div>
       </section>
 
-      <VideoPlayer live={match.status === 'live'} progress={match.progress} />
+      <MatchClock match={match} />
       <Scoreboard match={match} />
       <PredictionBar match={match} />
       <MatchTabs match={match} />

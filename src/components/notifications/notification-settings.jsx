@@ -16,8 +16,9 @@ const PREFS = [
   { id: 'final', label: 'Resultado final', hint: 'Al terminar cada partido' },
   { id: 'redCards', label: 'Tarjetas rojas', hint: 'Expulsiones en vivo' },
   { id: 'reminders', label: 'Recordatorios', hint: 'Partidos que marcaste con "Recordar"' },
+  { id: 'teamNews', label: 'Noticias de mi equipo', hint: 'Notas nuevas que mencionan a tu equipo' },
 ];
-const DEFAULTS = { goals: true, kickoff: true, final: true, redCards: false, reminders: true };
+const DEFAULTS = { goals: true, kickoff: true, final: true, redCards: false, reminders: true, teamNews: true };
 // shortcut: preferencias en localStorage hasta tener login; luego van en users/{uid}.notify.
 const KEY = 'futbolapp:notify';
 

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Bell } from '@/components/animate-ui/icons/bell';
+import { Search } from '@/components/animate-ui/icons/search';
 import { UserRound } from '@/components/animate-ui/icons/user-round';
 import { AnimatedLink } from '@/components/ui/animated-link';
 import { Logo } from '@/components/ui/logo';
@@ -12,6 +13,7 @@ export function MobileHeader({ active }) {
     <header className="mb-4 flex items-center justify-between md:hidden">
       <Link href="/" aria-label="Inicio"><Logo /></Link>
       <div className="flex items-center gap-2.5">
+        <AnimatedLink href="/buscar" aria-label="Buscar" className={btn(active === 'buscar')}><Search className="size-5" /></AnimatedLink>
         <AnimatedLink href="/notificaciones" aria-label="Notificaciones" className={btn(active === 'notificaciones')}><Bell className="size-5" /></AnimatedLink>
         <AnimatedLink href="/perfil" aria-label="Perfil" className={btn(active === 'perfil')}><UserRound className="size-5" /></AnimatedLink>
       </div>

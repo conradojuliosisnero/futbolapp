@@ -3,7 +3,7 @@ const PAGES = `${VERSION}-pages`;   // páginas: red primero, copia de respaldo 
 const STATIC = `${VERSION}-static`; // /_next/static: nunca cambian (el nombre lleva hash) → caché primero
 const IMAGES = 'futbolapp-images';  // fotos de jugadores: caché primero, se conserva entre versiones
 const MAX_IMAGES = 300;             // al pasar este tope se borran las más antiguas
-const ASSETS = ['/', '/manifest.webmanifest'];
+const ASSETS = ['/', '/manifest.webmanifest', '/pwa-icon/192'];
 
 // Fotos que se guardan en el dispositivo. (Los escudos de football-data ya los guarda el navegador 30 días por su cuenta.)
 const IMAGE_HOSTS = ['media.api-sports.io'];
@@ -66,10 +66,10 @@ self.addEventListener('fetch', (e) => {
 self.addEventListener('push', (e) => {
   let data = {};
   try { data = e.data ? e.data.json() : {}; } catch { data = { body: e.data?.text() }; }
-  e.waitUntil(self.registration.showNotification(data.title || 'Futbolapp', {
+  e.waitUntil(self.registration.showNotification(data.title || 'Minuto 90', {
     body: data.body || '',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
+    icon: '/pwa-icon/192',
+    badge: '/pwa-icon/192',
     tag: data.tag, // mismo tag = reemplaza la anterior (ej. marcador del mismo partido)
     data: { url: data.url || '/' },
   }));

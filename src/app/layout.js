@@ -3,6 +3,10 @@ import { siteConfig } from '@/config/site';
 import { ServiceWorker } from '@/components/pwa/service-worker';
 import '@/styles/globals.css';
 
+// Todas las páginas se generan al visitarlas: así el build/deploy no depende de que las APIs respondan.
+// Las consultas a las APIs siguen cacheadas y compartidas (revalidate en cada fetch).
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: `${siteConfig.name} — ${siteConfig.tagline}`,
   description: siteConfig.description,

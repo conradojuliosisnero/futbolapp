@@ -2,29 +2,20 @@ import 'server-only';
 import { fd } from './football-data';
 import { liveFixtures, fixturesOnDate, lineups, statistics, events, searchTeams, squad as afSquad, playerProfile, playerPhoto } from './api-football';
 import { sameTeam, bestTeamMatch, searchTerm, tokens } from './team-match.mjs';
-import { LEAGUES, leagueEmblem } from '@/config/leagues';
-import { siteConfig } from '@/config/site';
+import { unstable_cache } from 'next/cache';
+import * as espn from './espn';
+import { DAY, dayKey, time, dayLabel, todayLabel } from './dates';
+import { LEAGUES, leagueEmblem, leagueByCode, isEspnLeague } from '@/config/leagues';
+
+export { todayLabel };
 
 // Capa de datos real. Presupuesto de consultas (ver README → APIs):
 //   football-data (10/min): ventana de partidos 60 s · tablas 1 h · partidos de un equipo 10 min.
-//   API-Football (100/día): solo al abrir un partido → eventos, alineaciones y estadísticas (ver api-football.js).
-const CODES = LEAGUES.map((l) => l.code);
-const TZ = siteConfig.timeZone;
-
-// ---------- fechas (zona horaria de la app) ----------
-const DAY = 86_400_000;
-const dayKey = (date) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(date); // 2026-11-07
-const time = (date) => new Intl.DateTimeFormat('es', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(date);
-function dayLabel(date) {
-  const k = dayKey(date), now = Date.now();
-  if (k === dayKey(now)) return null;
-  if (k === dayKey(now + DAY)) return 'Mañana';
-  if (k === dayKey(now - DAY)) return 'Ayer';
-  return new Intl.DateTimeFormat('es', { timeZone: TZ, weekday: 'short', day: 'numeric' }).format(date);
-}
-export function todayLabel() {
-  return new Intl.DateTimeFormat('es', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short' }).format(Date.now());
-}
+//   ESPN (no oficial, sin clave): ligas sin football-data (Colombia, Argentina, México, MLS), minuto real,
+//     detalle de partido (eventos, relato, estadísticas, alineaciones) y noticias. Si falla, se usa lo demás.
+//   API-Football (100/día): respaldo del detalle de partido cuando ESPN no lo tiene (ver api-football.js).
+const CODES = LEAGUES.map((l) => l.code);                         // orden de la app
+const FD_CODES = LEAGUES.filter((l) => !l.source).map((l) => l.code); // las que salen de football-data
 
 // ---------- normalización football-data → forma de la app ----------
 const LIVE = new Set(['IN_PLAY', 'PAUSED']);
@@ -91,11 +82,32 @@ function groupByLeague(list) {
 /** Todos los partidos de las ligas configuradas, de hace 3 días a dentro de 6 (máx. 10 días por consulta). */
 async function windowMatches() {
   const from = dayKey(Date.now() - 3 * DAY), to = dayKey(Date.now() + 6 * DAY);
-  const data = await fd(`/matches?competitions=${CODES.join(',')}&dateFrom=${from}&dateTo=${to}`, { revalidate: 60 });
-  return (data.matches ?? []).map(toMatch);
+  const [data, ...espnLists] = await Promise.all([
+    fd(`/matches?competitions=${FD_CODES.join(',')}&dateFrom=${from}&dateTo=${to}`, { revalidate: 60 }),
+    ...LEAGUES.filter((l) => l.source === 'espn').map((l) => espn.leagueWindow(l)),
+  ]);
+  const fdMatches = await withRealMinute((data.matches ?? []).map(toMatch));
+  return [...fdMatches, ...espnLists.flat()];
+}
+
+/** football-data gratis no trae el minuto: si ESPN tiene el mismo partido en vivo, se usa su reloj (y su marcador). */
+async function withRealMinute(matches) {
+  const liveLeagues = [...new Set(matches.filter((m) => m.status === 'live').map((m) => m.leagueId))];
+  if (!liveLeagues.length) return matches;
+  const boards = Object.fromEntries(await Promise.all(liveLeagues.map(async (code) => {
+    const slug = leagueByCode(code)?.espn;
+    const lg = leagueByCode(code);
+    return [code, slug ? (await espn.scoreboard(slug)).map((ev) => espn.toMatch(ev, slug, lg)) : []];
+  })));
+  return matches.map((m) => {
+    if (m.status !== 'live') return m;
+    const e = boards[m.leagueId]?.find((x) => x.status === 'live' && sameTeam(x.home.name, m.home.name) && sameTeam(x.away.name, m.away.name));
+    return e ? { ...m, minute: e.minute, clock: e.clock, label: e.label, progress: e.progress, score: e.score } : m;
+  });
 }
 
 async function standingsOf(code) {
+  if (isEspnLeague(code)) return espn.standings(leagueByCode(code).espn);
   try {
     const data = await fd(`/competitions/${code}/standings`, { revalidate: 3600 });
     const groups = (data.standings ?? []).filter((s) => s.type === 'TOTAL').map((s) => ({
@@ -170,8 +182,24 @@ async function findFixture(match) {
   } catch { return null; }
 }
 
+/** Detalle desde ESPN (eventos, relato, estadísticas, alineaciones). null si ESPN no tiene el partido. */
+async function espnDetails(match) {
+  const slug = match.espn?.slug ?? leagueByCode(match.leagueId)?.espn;
+  if (!slug) return null;
+  const eventId = match.espn?.id ?? (await espn.findEvent(slug, match))?.id;
+  if (!eventId) return null;
+  const d = await espn.matchDetails(slug, eventId, match.status);
+  if (!d || (!d.events.length && !d.stats.length && !d.lineups && !d.commentary.length)) return null;
+  const { header, ...rest } = d;
+  return { ...match, ...rest };
+}
+
 /** Agrega eventos, goleadores, estadísticas y alineaciones. Lo que la API no tenga, simplemente no aparece. */
 async function withDetails(match) {
+  const fromEspn = await espnDetails(match).catch(() => null);
+  if (fromEspn) return fromEspn;
+  if (match.espn) return match; // ligas solo de ESPN: API-Football no las tiene emparejadas
+
   // Las alineaciones se publican ~1 h antes; antes de eso no se gasta cuota.
   if (match.status === 'scheduled' && match.utc - Date.now() > 60 * 60000) return match;
   const fx = await findFixture(match);
@@ -206,7 +234,16 @@ export async function getFeaturedMatch() {
 /** details: true agrega eventos, estadísticas y alineaciones (gasta API-Football; solo en la página del partido). */
 export async function getMatch(id, { details = false } = {}) {
   let match = (await windowMatches()).find((m) => m.id === String(id));
+  const eid = espn.parseEspnId(id);
+  if (!match && eid) {
+    // Partido de ESPN fuera de la ventana: se arma desde su resumen.
+    const lg = LEAGUES.find((l) => l.espn === eid.slug && l.source === 'espn');
+    const d = lg && await espn.matchDetails(eid.slug, eid.id, 'finished');
+    if (!d?.header) return null;
+    match = espn.toMatch(d.header, eid.slug, lg);
+  }
   if (!match) {
+    if (!/^\d+$/.test(String(id))) return null;
     // Partido fuera de la ventana: una consulta propia, con caché larga (ya no cambia).
     try { match = toMatch(await fd(`/matches/${encodeURIComponent(id)}`, { revalidate: 3600 })); }
     catch (e) { if (/ (400|404) /.test(e.message)) return null; throw e; }
@@ -223,10 +260,6 @@ export async function getTodayByLeague() {
   return groupByLeague((await windowMatches()).filter((m) => dayKey(m.utc) === today));
 }
 
-// shortcut: sin fuente de videos todavía (API-Football y football-data no los tienen); la sección se oculta.
-export async function getHighlights() {
-  return [];
-}
 
 /** { live, scheduled, finished } agrupados por liga. */
 export async function getMatchesByStatus() {
@@ -256,7 +289,7 @@ export async function getLeague(code) {
     ...conf,
     id: code,
     emblem: leagueEmblem(code),
-    season: season ? `${season.startDate.slice(0, 4)}/${season.endDate.slice(2, 4)}` : '',
+    season: season?.startDate ? `${season.startDate.slice(0, 4)}/${season.endDate.slice(2, 4)}` : season?.displayName ?? '',
     round: season?.currentMatchday ? `Jornada ${season.currentMatchday}` : '',
     groups,
     scorers,
@@ -266,6 +299,7 @@ export async function getLeague(code) {
 
 /** Goleadores de una liga (football-data, 1 h de caché). */
 export async function getScorers(code) {
+  if (isEspnLeague(code)) return []; // ESPN no expone goleadores en la API pública
   try {
     const d = await fd(`/competitions/${code}/scorers?limit=15`, { revalidate: 3600 });
     return (d.scorers ?? []).map((x) => ({
@@ -304,23 +338,8 @@ async function afSquadFor(info) {
   });
 }
 
-/** Página de equipo: ficha, plantilla, próximos partidos, resultados, forma y tabla de su liga. */
-export async function getTeamPage(teamId) {
-  const id = Number(teamId);
-  if (!Number.isInteger(id) || id <= 0) return null;
-  let info;
-  try { info = await fd(`/teams/${id}`, { revalidate: 86400 }); }
-  catch (e) { if (/ (400|403|404) /.test(e.message)) return null; throw e; }
-
-  const running = info.runningCompetitions ?? [];
-  const leagueComp = running.find((c) => c.type === 'LEAGUE' && CODES.includes(c.code)) ?? running.find((c) => c.type === 'LEAGUE');
-  const from = dayKey(Date.now() - 45 * DAY), to = dayKey(Date.now() + 45 * DAY);
-  const [{ groups }, data, afPlayers] = await Promise.all([
-    leagueComp ? standingsOf(leagueComp.code) : { groups: [] },
-    fd(`/teams/${id}/matches?dateFrom=${from}&dateTo=${to}`, { revalidate: 600 }),
-    afSquadFor(info).catch(() => null),
-  ]);
-  const matches = (data.matches ?? []).map(toMatch);
+/** Arma la página de equipo con los datos de cualquier proveedor. */
+function buildTeamPage({ team: t, league, matches, players, groups, id }) {
   const rows = groups.find((g) => g.rows.some((r) => r.team.id === id))?.rows ?? [];
   const idx = rows.findIndex((r) => r.team.id === id);
   const results = matches.filter((m) => m.status === 'finished').sort((a, b) => b.utc - a.utc);
@@ -328,17 +347,9 @@ export async function getTeamPage(teamId) {
     const [h, a] = m.score; const mine = m.home.id === id ? h - a : a - h;
     return mine > 0 ? 'G' : mine === 0 ? 'E' : 'P';
   }).join('');
-
-  // Con API-Football: fotos, dorsales y enlace al perfil. Sin ella (o sin cuota): la plantilla de football-data.
-  const players = afPlayers ?? (info.squad ?? []).map((p) => ({
-    id: p.id, playerId: null, name: p.name, position: POSITION_ES[p.position] ?? p.position ?? '', group: positionGroup(p.position),
-    nationality: p.nationality, age: age(p.dateOfBirth), number: p.shirtNumber ?? null, photo: null,
-  }));
-  const squad = POSITION_GROUPS.map((group) => ({ group, players: players.filter((p) => p.group === group) })).filter((g) => g.players.length);
-
   return {
-    team: { ...team(info), founded: info.founded, venue: info.venue, colors: info.clubColors, website: info.website, coach: info.coach?.name ?? null },
-    league: leagueComp ? { id: leagueComp.code, name: leagueName(leagueComp.code, leagueComp.name), inApp: CODES.includes(leagueComp.code) } : null,
+    team: t,
+    league,
     position: idx >= 0 ? idx + 1 : null,
     standing: idx >= 0 ? rows[idx] : null,
     form,
@@ -346,8 +357,52 @@ export async function getTeamPage(teamId) {
     live: matches.filter((m) => m.status === 'live'),
     upcoming: matches.filter((m) => m.status === 'scheduled').sort((a, b) => a.utc - b.utc),
     results,
-    squad,
+    squad: POSITION_GROUPS.map((group) => ({ group, players: players.filter((p) => p.group === group) })).filter((g) => g.players.length),
   };
+}
+
+/** Equipo de una liga de ESPN (id "col.1-5264"). */
+async function espnTeamPage({ slug, id }) {
+  const lg = LEAGUES.find((l) => l.espn === slug);
+  if (!lg) return null;
+  const [bundle, { groups }] = await Promise.all([espn.teamBundle(slug, id, lg), espn.standings(slug)]);
+  if (!bundle) return null;
+  return buildTeamPage({
+    team: bundle.team, matches: bundle.matches, players: bundle.players, groups, id: bundle.team.id,
+    league: { id: lg.code, name: lg.name, inApp: true },
+  });
+}
+
+/** Página de equipo: ficha, plantilla, próximos partidos, resultados, forma y tabla de su liga. */
+export async function getTeamPage(teamId) {
+  const eid = espn.parseEspnId(teamId);
+  if (eid) return espnTeamPage(eid);
+  const id = Number(teamId);
+  if (!Number.isInteger(id) || id <= 0) return null;
+  let info;
+  try { info = await fd(`/teams/${id}`, { revalidate: 86400 }); }
+  catch (e) { if (/ (400|403|404) /.test(e.message)) return null; throw e; }
+
+  const running = info.runningCompetitions ?? [];
+  const leagueComp = running.find((c) => c.type === 'LEAGUE' && FD_CODES.includes(c.code)) ?? running.find((c) => c.type === 'LEAGUE');
+  const from = dayKey(Date.now() - 45 * DAY), to = dayKey(Date.now() + 45 * DAY);
+  const [{ groups }, data, afPlayers] = await Promise.all([
+    leagueComp ? standingsOf(leagueComp.code) : { groups: [] },
+    fd(`/teams/${id}/matches?dateFrom=${from}&dateTo=${to}`, { revalidate: 600 }),
+    afSquadFor(info).catch(() => null),
+  ]);
+  const matches = (data.matches ?? []).map(toMatch);
+
+  // Con API-Football: fotos, dorsales y enlace al perfil. Sin ella (o sin cuota): la plantilla de football-data.
+  const players = afPlayers ?? (info.squad ?? []).map((p) => ({
+    id: p.id, playerId: null, name: p.name, position: POSITION_ES[p.position] ?? p.position ?? '', group: positionGroup(p.position),
+    nationality: p.nationality, age: age(p.dateOfBirth), number: p.shirtNumber ?? null, photo: null,
+  }));
+  return buildTeamPage({
+    team: { ...team(info), founded: info.founded, venue: info.venue, colors: info.clubColors, website: info.website, coach: info.coach?.name ?? null },
+    league: leagueComp ? { id: leagueComp.code, name: leagueName(leagueComp.code, leagueComp.name), inApp: CODES.includes(leagueComp.code) } : null,
+    matches, players, groups, id,
+  });
 }
 
 const POSITION_PROFILE = { Goalkeeper: 'Portero', Defender: 'Defensa', Midfielder: 'Mediocampista', Attacker: 'Delantero' };
@@ -365,3 +420,42 @@ export async function getPlayer(playerId) {
     height: p.height ? `${p.height} cm` : null, weight: p.weight ? `${p.weight} kg` : null, photo: p.photo ?? playerPhoto(p.id),
   };
 }
+
+// ---------- noticias ----------
+
+/** Noticias de ESPN en español. code: una liga, o todas si se omite. */
+export async function getNews(code) {
+  const leagues = code ? LEAGUES.filter((l) => l.code === code) : LEAGUES;
+  const lists = await Promise.all(leagues.map((l) => espn.news(l.espn, l, code ? 20 : 6)));
+  const seen = new Set();
+  return lists.flat()
+    .filter((a) => !seen.has(a.headline) && seen.add(a.headline))
+    .sort((a, b) => Date.parse(b.published ?? 0) - Date.parse(a.published ?? 0));
+}
+
+/** Noticias que mencionan a un equipo (de las noticias de su liga). */
+export async function getTeamNews(teamName, leagueCode) {
+  const lg = leagueByCode(leagueCode);
+  if (!lg?.espn) return [];
+  const all = await espn.news(lg.espn, lg, 30);
+  const want = tokens(teamName);
+  return all.filter((n) => tokens(`${n.headline} ${n.description}`).some((t) => want.includes(t))).slice(0, 8);
+}
+
+// ---------- buscador ----------
+
+/** Índice de ligas y equipos (de las tablas de todas las ligas + partidos de la semana). 6 h de caché. */
+export const getSearchIndex = unstable_cache(async () => {
+  const [groupsByLeague, week] = await Promise.all([
+    Promise.all(LEAGUES.map((l) => standingsOf(l.code).then((r) => [l, r.groups]).catch(() => [l, []]))),
+    windowMatches().catch(() => []),
+  ]);
+  const teams = new Map();
+  const add = (t, l) => { if (t?.id != null && !teams.has(String(t.id))) teams.set(String(t.id), { id: t.id, name: t.name, crest: t.crest, league: l?.name ?? '' }); };
+  for (const [l, groups] of groupsByLeague) for (const g of groups) for (const r of g.rows) add(r.team, l);
+  for (const m of week) { const l = leagueByCode(m.leagueId); add(m.home, l); add(m.away, l); }
+  return {
+    leagues: LEAGUES.map((l) => ({ code: l.code, name: l.name, country: l.country, emblem: leagueEmblem(l.code) })),
+    teams: [...teams.values()],
+  };
+}, ['search-index-v1'], { revalidate: 21600 });
