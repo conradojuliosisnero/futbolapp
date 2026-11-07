@@ -1,7 +1,7 @@
 import 'server-only';
 import { fd } from './football-data';
-import { liveFixtures, fixturesOnDate, lineups, statistics, events } from './api-football';
-import { sameTeam } from './team-match.mjs';
+import { liveFixtures, fixturesOnDate, lineups, statistics, events, searchTeams, squad as afSquad, playerProfile, playerPhoto } from './api-football';
+import { sameTeam, bestTeamMatch, searchTerm, tokens } from './team-match.mjs';
 import { LEAGUES, leagueEmblem } from '@/config/leagues';
 import { siteConfig } from '@/config/site';
 
@@ -151,7 +151,7 @@ function toStats(resp, homeName) {
 const POS = { G: 'POR', D: 'DEF', M: 'MED', F: 'DEL' };
 function toLineups(resp, homeName) {
   if (!resp || resp.length < 2) return null;
-  const player = (x) => ({ number: x.player.number, name: x.player.name, pos: POS[x.player.pos] ?? x.player.pos ?? '', grid: x.player.grid });
+  const player = (x) => ({ id: x.player.id, number: x.player.number, name: x.player.name, pos: POS[x.player.pos] ?? x.player.pos ?? '', grid: x.player.grid, photo: x.player.id ? playerPhoto(x.player.id) : null });
   const side = (t) => ({ formation: t.formation, coach: t.coach?.name, startXI: t.startXI.map(player), subs: t.substitutes.map(player) });
   const [h, a] = homeFirst(resp, homeName);
   return { home: side(h), away: side(a) };
@@ -283,6 +283,26 @@ const POSITION_ES = { Goalkeeper: 'Portero', Defence: 'Defensa', Midfield: 'Medi
   'Central Midfield': 'Mediocentro', 'Attacking Midfield': 'Mediapunta', 'Left Winger': 'Extremo izq.',
   'Right Winger': 'Extremo der.', 'Centre-Forward': 'Delantero centro', 'Left Midfield': 'Volante izq.', 'Right Midfield': 'Volante der.' };
 const age = (dob) => (dob ? Math.floor((Date.now() - Date.parse(dob)) / (365.25 * DAY)) : null);
+const AF_GROUP = { Goalkeeper: 'Porteros', Defender: 'Defensas', Midfielder: 'Mediocampistas', Attacker: 'Delanteros' };
+const AF_POSITION = { Goalkeeper: 'Portero', Defender: 'Defensa', Midfielder: 'Mediocampista', Attacker: 'Delantero' };
+const lastToken = (n) => tokens(n).at(-1) ?? n.toLowerCase();
+
+/** Plantilla de API-Football (con fotos y dorsales) para un equipo de football-data. null si no se encuentra o no hay cuota. */
+async function afSquadFor(info) {
+  const results = await searchTeams(searchTerm(info.name));
+  const match = results && bestTeamMatch(info.name, results.map((r) => ({ id: r.team.id, name: r.team.name, country: r.team.country })), info.area?.name);
+  if (!match) return null;
+  const players = (await afSquad(match.id))?.[0]?.players;
+  if (!players?.length) return null;
+  const fdByLast = new Map((info.squad ?? []).map((p) => [lastToken(p.name), p]));
+  return players.map((p) => {
+    const fdP = fdByLast.get(lastToken(p.name));
+    return {
+      id: p.id, playerId: p.id, name: fdP?.name ?? p.name, number: p.number ?? null, age: p.age ?? age(fdP?.dateOfBirth),
+      position: AF_POSITION[p.position] ?? p.position, group: AF_GROUP[p.position] ?? 'Otros', nationality: fdP?.nationality ?? null, photo: p.photo ?? playerPhoto(p.id),
+    };
+  });
+}
 
 /** Página de equipo: ficha, plantilla, próximos partidos, resultados, forma y tabla de su liga. */
 export async function getTeamPage(teamId) {
@@ -295,9 +315,10 @@ export async function getTeamPage(teamId) {
   const running = info.runningCompetitions ?? [];
   const leagueComp = running.find((c) => c.type === 'LEAGUE' && CODES.includes(c.code)) ?? running.find((c) => c.type === 'LEAGUE');
   const from = dayKey(Date.now() - 45 * DAY), to = dayKey(Date.now() + 45 * DAY);
-  const [{ groups }, data] = await Promise.all([
+  const [{ groups }, data, afPlayers] = await Promise.all([
     leagueComp ? standingsOf(leagueComp.code) : { groups: [] },
     fd(`/teams/${id}/matches?dateFrom=${from}&dateTo=${to}`, { revalidate: 600 }),
+    afSquadFor(info).catch(() => null),
   ]);
   const matches = (data.matches ?? []).map(toMatch);
   const rows = groups.find((g) => g.rows.some((r) => r.team.id === id))?.rows ?? [];
@@ -308,12 +329,12 @@ export async function getTeamPage(teamId) {
     return mine > 0 ? 'G' : mine === 0 ? 'E' : 'P';
   }).join('');
 
-  const squad = POSITION_GROUPS.map((group) => ({
-    group,
-    players: (info.squad ?? []).filter((p) => positionGroup(p.position) === group).map((p) => ({
-      id: p.id, name: p.name, position: POSITION_ES[p.position] ?? p.position ?? '', nationality: p.nationality, age: age(p.dateOfBirth), number: p.shirtNumber ?? null,
-    })),
-  })).filter((g) => g.players.length);
+  // Con API-Football: fotos, dorsales y enlace al perfil. Sin ella (o sin cuota): la plantilla de football-data.
+  const players = afPlayers ?? (info.squad ?? []).map((p) => ({
+    id: p.id, playerId: null, name: p.name, position: POSITION_ES[p.position] ?? p.position ?? '', group: positionGroup(p.position),
+    nationality: p.nationality, age: age(p.dateOfBirth), number: p.shirtNumber ?? null, photo: null,
+  }));
+  const squad = POSITION_GROUPS.map((group) => ({ group, players: players.filter((p) => p.group === group) })).filter((g) => g.players.length);
 
   return {
     team: { ...team(info), founded: info.founded, venue: info.venue, colors: info.clubColors, website: info.website, coach: info.coach?.name ?? null },
@@ -326,5 +347,21 @@ export async function getTeamPage(teamId) {
     upcoming: matches.filter((m) => m.status === 'scheduled').sort((a, b) => a.utc - b.utc),
     results,
     squad,
+  };
+}
+
+const POSITION_PROFILE = { Goalkeeper: 'Portero', Defender: 'Defensa', Midfielder: 'Mediocampista', Attacker: 'Delantero' };
+
+/** Perfil de un jugador (id de API-Football). Las estadísticas de temporada no están en el plan gratis. */
+export async function getPlayer(playerId) {
+  const id = Number(playerId);
+  if (!Number.isInteger(id) || id <= 0) return null;
+  const p = (await playerProfile(id))?.[0]?.player;
+  if (!p) return null;
+  return {
+    id: p.id, name: p.name, fullName: [p.firstname, p.lastname].filter(Boolean).join(' '), number: p.number ?? null,
+    position: POSITION_PROFILE[p.position] ?? p.position, age: p.age, birthDate: p.birth?.date ?? null,
+    birthPlace: [p.birth?.place, p.birth?.country].filter(Boolean).join(', '), nationality: p.nationality,
+    height: p.height ? `${p.height} cm` : null, weight: p.weight ? `${p.weight} kg` : null, photo: p.photo ?? playerPhoto(p.id),
   };
 }

@@ -4,6 +4,8 @@ import { TeamCrest } from '@/components/ui/team-crest';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { StandingsTable, FormGuide } from '@/components/league/standings-table';
 import { MatchRow } from '@/components/match/match-list';
+import { PlayerAvatar } from '@/components/ui/player-avatar';
+import { AnimatedLink } from '@/components/ui/animated-link';
 import { cn, ENTER, stagger } from '@/lib/utils';
 
 function MatchSection({ title, matches, empty }) {
@@ -17,7 +19,7 @@ function MatchSection({ title, matches, empty }) {
   );
 }
 
-function Squad({ squad }) {
+function Squad({ squad, teamId }) {
   if (!squad.length) return <p className="py-6 text-center text-muted-foreground">Plantilla no disponible.</p>;
   return (
     <div className="flex flex-col gap-5">
@@ -25,16 +27,26 @@ function Squad({ squad }) {
         <section key={g.group} className="flex flex-col gap-2">
           <h3 className="text-xs font-semibold tracking-wider text-faint uppercase">{g.group} · {g.players.length}</h3>
           <ul className="flex flex-col overflow-hidden rounded-2xl bg-card">
-            {g.players.map((p, i) => (
-              <li key={p.id} style={stagger(i)} className={cn(ENTER, 'flex items-center gap-3 border-b px-4 py-3 last:border-b-0')}>
-                <span className="grid size-9 flex-none place-items-center rounded-full bg-secondary text-sm font-black text-subtle">{p.number ?? '·'}</span>
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-sm font-bold">{p.name}</span>
-                  <span className="truncate text-xs text-muted-foreground">{[p.position, p.nationality].filter(Boolean).join(' · ')}</span>
-                </span>
-                {p.age != null && <span className="text-xs font-semibold text-faint tabular-nums">{p.age} años</span>}
-              </li>
-            ))}
+            {g.players.map((p, i) => {
+              const row = (
+                <>
+                  <PlayerAvatar player={p} size={40} />
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-sm font-bold">{p.name}</span>
+                    <span className="truncate text-xs text-muted-foreground">{[p.position, p.nationality].filter(Boolean).join(' · ')}</span>
+                  </span>
+                  {p.age != null && <span className="text-xs font-semibold text-faint tabular-nums">{p.age} años</span>}
+                </>
+              );
+              const cls = 'flex items-center gap-3 border-b px-4 py-3 last:border-b-0';
+              return (
+                <li key={p.id} style={stagger(i)} className={ENTER}>
+                  {p.playerId
+                    ? <AnimatedLink href={`/jugador/${p.playerId}?equipo=${teamId}`} className={cn(cls, 'transition-colors hover:bg-secondary hover:text-inherit')}>{row}</AnimatedLink>
+                    : <div className={cls}>{row}</div>}
+                </li>
+              );
+            })}
           </ul>
         </section>
       ))}
@@ -102,7 +114,7 @@ export function TeamView({ data, note }) {
               </div>
             ),
           },
-          { value: 'squad', label: 'Plantilla', content: <Squad squad={squad} /> },
+          { value: 'squad', label: 'Plantilla', content: <Squad squad={squad} teamId={team.id} /> },
           {
             value: 'table',
             label: 'Tabla',

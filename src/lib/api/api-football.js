@@ -52,6 +52,14 @@ export const fixturesOnDate = unstable_cache(
   { revalidate: 21600 },
 );
 
+// Equipos y jugadores (no dependen de la temporada → sí funcionan en el plan gratis). Cambian poco: caché larga.
+export const searchTeams = (term) => af(`/teams?search=${encodeURIComponent(term)}`, { revalidate: 2592000 }); // 30 días
+export const squad = (teamId) => af(`/players/squads?team=${teamId}`, { revalidate: 604800 }); // 7 días
+export const playerProfile = (playerId) => af(`/players/profiles?player=${playerId}`, { revalidate: 2592000 }); // 30 días
+
+/** Foto pública del jugador (CDN de API-Football; no gasta consultas). */
+export const playerPhoto = (playerId) => `https://media.api-sports.io/football/players/${playerId}.png`;
+
 export const lineups = (fixtureId) => af(`/fixtures/lineups?fixture=${fixtureId}`, { revalidate: 21600 });
 export const statistics = (fixtureId, live) => af(`/fixtures/statistics?fixture=${fixtureId}`, { revalidate: live ? 1800 : 86400 });
 export const events = (fixtureId) => af(`/fixtures/events?fixture=${fixtureId}`, { revalidate: 86400 });

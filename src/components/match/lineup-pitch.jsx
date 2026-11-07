@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { PlayerAvatar } from '@/components/ui/player-avatar';
 import { cn } from '@/lib/utils';
 
 const shortName = (n = '') => n.split(' ').slice(-1)[0];
@@ -13,14 +15,16 @@ function rowsOf(players) {
 }
 
 function Player({ p, away }) {
-  return (
-    <span className="flex w-16 flex-col items-center gap-1 text-center">
-      <span className={cn('grid size-8 place-items-center rounded-full text-xs font-black shadow-md', away ? 'bg-foreground text-background' : 'bg-primary text-primary-foreground')}>
-        {p.number ?? ''}
-      </span>
+  const body = (
+    <>
+      <PlayerAvatar player={p} size={34} ring={cn('ring-2 shadow-md', away ? 'ring-foreground' : 'ring-primary')} />
       <span className="line-clamp-1 text-2xs font-semibold text-foreground/90">{shortName(p.name)}</span>
-    </span>
+    </>
   );
+  const cls = 'flex w-16 flex-col items-center gap-1 text-center';
+  return p.id
+    ? <Link href={`/jugador/${p.id}`} className={cn(cls, 'transition-transform hover:scale-105 hover:text-inherit')}>{body}</Link>
+    : <span className={cls}>{body}</span>;
 }
 
 function Half({ side, away }) {
