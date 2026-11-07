@@ -23,6 +23,7 @@ rules_version = '2';
 //   keys: { p256dh, auth }
 //   userAgent: string
 //   createdAt: timestamp
+//   muted: { [matchId]: ms }   "Silenciar partido" desde la notificación (lo escribe solo el servidor: /api/push/mute)
 //
 // users/{uid}/notifications/{id}      bandeja de avisos (la escribe solo el servidor)
 //   type: 'goal' | 'card' | 'kickoff' | 'final' | 'reminder' | 'news'

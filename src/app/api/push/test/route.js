@@ -23,11 +23,15 @@ export async function POST(request) {
 
   setVapidDetails(subject || 'mailto:soporte@futbolapp.app', pub, priv);
   try {
+    // Ejemplo de cómo se ve un aviso de gol (imagen del marcador, vibración y botón; en iPhone solo título y texto).
+    const image = `/api/push-image?${new URLSearchParams({ k: 'test', h: 'Tu equipo', a: 'Rival', s: '1-0', m: "34'", l: 'Así te avisaremos de los goles', x: 'h' })}`;
     await sendNotification(body.subscription, JSON.stringify({
-      title: 'Minuto 90 · notificación de prueba',
-      body: 'Así te avisaremos de los goles de tus equipos.',
+      title: '⚽ ¡GOL de tu equipo! 1-0',
+      body: 'Así te avisaremos de los goles de tus equipos.\nNotificación de prueba · Minuto 90',
       url: '/partidos',
       tag: 'test',
+      kind: 'test',
+      image,
     }));
     return Response.json({ ok: true });
   } catch (e) {

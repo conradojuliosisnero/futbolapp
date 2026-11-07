@@ -30,10 +30,13 @@ export async function deliver(db, users, n) {
     });
     if (!canPush) continue;
     const subs = await userRef.collection('pushSubscriptions').get();
+    // Lo que dibuja el service worker (public/sw.js): escudo, imagen del marcador, vibración según el tipo y botones.
+    const payload = JSON.stringify({ title: n.title, body: n.body, url: n.url, tag: n.tag, kind: n.kind, icon: n.icon, image: n.image, matchId: n.matchId });
     await Promise.all(subs.docs.map(async (doc) => {
-      const { endpoint, keys } = doc.data();
+      const { endpoint, keys, muted } = doc.data();
+      if (n.matchId && muted?.[n.matchId]) return; // "Silenciar partido" en este dispositivo
       try {
-        await sendNotification({ endpoint, keys }, JSON.stringify({ title: n.title, body: n.body, url: n.url, tag: n.tag }), { TTL: 3600 });
+        await sendNotification({ endpoint, keys }, payload, { TTL: 3600, urgency: n.kind === 'goal' || n.kind === 'red' ? 'high' : 'normal' });
         sent++;
       } catch (e) {
         // 404/410: el usuario desinstaló o revocó el permiso → se borra el dispositivo.

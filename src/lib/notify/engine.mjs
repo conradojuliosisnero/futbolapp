@@ -1,9 +1,21 @@
 // Decide QUÉ avisar comparando el estado actual de un partido con lo ya avisado. Funciones puras (sin red ni base).
+import { notifIcon, pushImageUrl } from './look.mjs';
 
 /** Identificador estable de un evento (minuto + tipo + jugador/título). */
 export const eventKey = (e) => `${e.min}|${e.type}|${e.player ?? e.title ?? ''}`;
 
 const score = (m) => (m.score ? `${m.home.name} ${m.score[0]}–${m.score[1]} ${m.away.name}` : `${m.home.name} vs ${m.away.name}`);
+const sideTeam = (m, side) => (side === 'away' ? m.away : m.home);
+
+/** Aviso de un partido con el aspecto de la app: kind (vibración/sonido), escudo, imagen del marcador y botones. */
+function matchNotif(match, { pref, kind, title, body, team, minute, highlight }) {
+  return {
+    pref, kind, title, body,
+    url: `/partido/${match.id}`, tag: `m-${match.id}`, matchId: String(match.id),
+    icon: notifIcon(team?.crest ?? match.home.crest),
+    image: pushImageUrl({ kind, match, minute, highlight }),
+  };
+}
 
 /**
  * prev: { status, keys: [] } de la corrida anterior (o null si es la primera vez que se ve el partido).
@@ -17,24 +29,31 @@ export function matchNotifications(match, prev) {
   if (!prev) return { notifications: [], state };
 
   const seen = new Set(prev.keys ?? []);
-  const url = `/partido/${match.id}`;
-  const tag = `m-${match.id}`;
   const out = [];
 
   if (prev.status === 'scheduled' && match.status === 'live') {
-    out.push({ pref: 'kickoff', title: `¡Empezó! ${match.home.name} vs ${match.away.name}`, body: match.league, url, tag });
+    out.push(matchNotif(match, { pref: 'kickoff', kind: 'kickoff', title: `▶️ ¡Empezó! ${match.home.name} vs ${match.away.name}`, body: match.league, minute: "1'" }));
   }
   // Más antiguos primero, para que lleguen en orden.
   for (const e of [...events].reverse()) {
     if (seen.has(eventKey(e))) continue;
+    const team = sideTeam(match, e.side);
     if (e.type === 'goal') {
-      out.push({ pref: 'goals', title: `⚽ ¡GOL! ${score(match)}`, body: `${e.player ?? ''} ${e.min}`.trim(), url, tag });
+      out.push(matchNotif(match, {
+        pref: 'goals', kind: 'goal', team, minute: e.min, highlight: e.side === 'away' ? 'a' : 'h',
+        title: `⚽ ¡GOL de ${team.name}! ${match.score ? `${match.score[0]}-${match.score[1]}` : ''}`.trim(),
+        body: [score(match), [e.player, e.min].filter(Boolean).join(' · ')].filter(Boolean).join('\n'),
+      }));
     } else if (e.type === 'red') {
-      out.push({ pref: 'redCards', title: `🟥 Roja en ${match.home.code}–${match.away.code}`, body: `${e.title} · ${e.min}`, url, tag });
+      out.push(matchNotif(match, {
+        pref: 'redCards', kind: 'red', team, minute: e.min, highlight: e.side === 'away' ? 'a' : 'h',
+        title: `🟥 Roja · ${team.name}`,
+        body: [`${e.player ?? e.title} · ${e.min}`, 'Juega con 10'].join('\n'),
+      }));
     }
   }
   if (prev.status !== 'finished' && match.status === 'finished') {
-    out.push({ pref: 'final', title: `Final: ${score(match)}`, body: match.league, url, tag });
+    out.push(matchNotif(match, { pref: 'final', kind: 'final', title: `🏁 Final: ${score(match)}`, body: match.league, minute: 'Final' }));
   }
   return { notifications: out, state };
 }
@@ -50,7 +69,10 @@ export function newsNotifications(team, articles, prevUrls, max = 2) {
   const seen = new Set(prevUrls);
   const fresh = articles.filter((a) => !seen.has(a.url)).slice(0, max);
   return {
-    notifications: fresh.map((a) => ({ pref: 'teamNews', title: `📰 ${team.name}`, body: a.headline, url: a.url, tag: `n-${team.id}` })),
+    notifications: fresh.map((a) => ({
+      pref: 'teamNews', kind: 'news', title: `📰 ${team.name}`, body: a.headline, url: a.url, tag: `n-${team.id}`,
+      icon: notifIcon(team.crest), image: a.image ?? undefined,
+    })),
     state: { urls: [...new Set([...urls, ...prevUrls])].slice(0, 50) },
   };
 }

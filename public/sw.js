@@ -61,23 +61,57 @@ self.addEventListener('fetch', (e) => {
   );
 });
 
-// Notificaciones push. Payload JSON: { title, body, url, tag }.
+// Notificaciones push. Payload JSON: { title, body, url, tag, kind, icon, image, matchId } (ver src/lib/notify/look.mjs).
 // Siempre se muestra una notificación: iOS revoca el permiso si un push llega sin mostrar nada.
+// iPhone solo muestra título y texto; Android y Chrome de escritorio también escudo, imagen, badge, botones y vibración.
+const VIBRATE = {
+  goal: [200, 80, 200, 80, 500],
+  red: [350, 120, 350],
+  kickoff: [120, 60, 120],
+  final: [200, 100, 200, 100, 200, 100, 700],
+  news: [80],
+  test: [200, 80, 200, 80, 500],
+};
+
 self.addEventListener('push', (e) => {
   let data = {};
   try { data = e.data ? e.data.json() : {}; } catch { data = { body: e.data?.text() }; }
+  const actions = data.matchId
+    ? [{ action: 'open', title: 'Ver partido' }, { action: 'mute', title: 'Silenciar partido' }]
+    : [{ action: 'open', title: 'Abrir' }];
   e.waitUntil(self.registration.showNotification(data.title || 'Minuto 90', {
     body: data.body || '',
-    icon: '/pwa-icon/192',
-    badge: '/pwa-icon/192',
-    tag: data.tag, // mismo tag = reemplaza la anterior (ej. marcador del mismo partido)
-    data: { url: data.url || '/' },
+    icon: data.icon || '/pwa-icon/192', // escudo del equipo (o el ícono de la app)
+    badge: '/pwa-icon/badge',            // silueta blanca para la barra de estado de Android
+    image: data.image || undefined,      // marcador al estilo de la app (/api/push-image)
+    tag: data.tag,                       // mismo tag = reemplaza la anterior del mismo partido…
+    renotify: Boolean(data.tag),         // …pero vuelve a sonar y vibrar
+    vibrate: VIBRATE[data.kind] ?? [120],
+    timestamp: Date.now(),
+    actions,
+    data: { url: data.url || '/', matchId: data.matchId ?? null },
   }));
 });
 
-// Al tocar la notificación: enfoca la app si ya está abierta, si no la abre en la URL del aviso.
+/** "Silenciar partido": el servidor deja de mandar avisos de ese partido a este dispositivo. */
+async function muteMatch(matchId) {
+  const sub = await self.registration.pushManager.getSubscription();
+  if (!sub || !matchId) return;
+  const res = await fetch('/api/push/mute', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ endpoint: sub.endpoint, matchId }),
+  }).catch(() => null);
+  await self.registration.showNotification(res?.ok ? 'Partido silenciado' : 'No se pudo silenciar', {
+    body: res?.ok ? 'No te avisaremos más de este partido en este dispositivo.' : 'Intenta de nuevo desde la app.',
+    icon: '/pwa-icon/192', badge: '/pwa-icon/badge', tag: `mute-${matchId}`, silent: true,
+  });
+}
+
+// Al tocar la notificación (o "Ver partido"): enfoca la app si ya está abierta, si no la abre en la URL del aviso.
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
+  if (e.action === 'mute') { e.waitUntil(muteMatch(e.notification.data?.matchId)); return; }
   const url = new URL(e.notification.data?.url || '/', self.location.origin).href;
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
     const win = wins.find((w) => w.url.startsWith(self.location.origin));

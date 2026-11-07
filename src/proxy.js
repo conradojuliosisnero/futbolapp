@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 
 // Cuenta cada llamada al servidor (páginas, navegación dentro de la app y /api) para el panel /admin.
-// No cuenta archivos estáticos, prefetch de enlaces ni la tarea programada. Se escribe después de responder.
+// No cuenta archivos estáticos, prefetch de enlaces, la tarea programada ni las imágenes de las notificaciones. Se escribe después de responder.
 // El contador (firebase-admin) se carga aparte: si falla, solo se pierde el conteo y la página responde igual.
 const SESSION_COOKIE = 'm90_token'; // igual que en server-session.js
 
 export function proxy(request, event) {
   const { pathname } = request.nextUrl;
   const prefetch = request.headers.get('next-router-prefetch') || request.headers.get('purpose') === 'prefetch';
-  if (!prefetch && !pathname.startsWith('/api/cron')) {
+  if (!prefetch && !pathname.startsWith('/api/cron') && !pathname.startsWith('/api/push-image')) {
     const token = request.cookies.get(SESSION_COOKIE)?.value;
     event.waitUntil(
       import('@/lib/usage/track')

@@ -125,6 +125,11 @@ Breakpoints: `md` = 768px (tablet) y `xl` = 1200px (escritorio).
 - **Favoritos** (`/favoritos`): en la página de cualquier equipo toca la ★ **Agregar a favoritos** (máx. 50). De tus favoritos llegan los avisos.
   **Hacer mi equipo** elige el principal (el de `/mi-equipo`) y también lo agrega a favoritos.
 - **iPhone:** push solo con iOS 16.4+ y la app instalada (Compartir → Agregar a inicio).
+- **Aspecto de las notificaciones** (`public/sw.js` + `src/lib/notify/look.mjs`): escudo del equipo como ícono, imagen grande
+  con el marcador al estilo de la app (`/api/push-image`, fuente Archivo en `src/assets/fonts`), badge blanco para la barra
+  de Android (`/pwa-icon/badge`), vibración según el aviso (gol, roja, inicio, final), y botones **Ver partido** /
+  **Silenciar partido** (`/api/push/mute`). Un aviso nuevo del mismo partido reemplaza al anterior y vuelve a sonar.
+  iPhone solo muestra título y texto (Apple no permite imagen, botones ni badge).
 
 ### Avisos automáticos (goles, rojas, inicio, final y noticias de tu equipo)
 

@@ -22,7 +22,8 @@ test('avisa inicio, solo los goles nuevos y el final', () => {
   const g1 = goal("12'", 'Morelos'), g2 = goal("70'", 'Asprilla');
   const r1 = matchNotifications({ ...base, score: [1, 0], events: [g1] }, start.state);
   assert.equal(r1.notifications.length, 1);
-  assert.match(r1.notifications[0].title, /GOL! Atl\. Nacional 1–0 Pereira/);
+  assert.equal(r1.notifications[0].title, '⚽ ¡GOL de Atl. Nacional! 1-0');
+  assert.match(r1.notifications[0].body, /Atl\. Nacional 1–0 Pereira/);
 
   // Corre otra vez sin cambios: no repite.
   assert.equal(matchNotifications({ ...base, score: [1, 0], events: [g1] }, r1.state).notifications.length, 0);
@@ -30,7 +31,7 @@ test('avisa inicio, solo los goles nuevos y el final', () => {
   // Llega el segundo gol y termina el partido (eventos: más reciente primero).
   const fin = matchNotifications({ ...base, status: 'finished', score: [2, 0], events: [g2, g1] }, r1.state);
   assert.deepEqual(fin.notifications.map((n) => n.pref), ['goals', 'final']);
-  assert.match(fin.notifications[0].body, /Asprilla 70'/);
+  assert.match(fin.notifications[0].body, /Asprilla · 70'/);
 });
 
 test('roja avisa con su preferencia; amarilla no avisa', () => {
@@ -74,4 +75,20 @@ test('partido entre dos favoritos del mismo usuario: se le avisa una sola vez', 
   const by = groupUsersByTeam([{ uid: 'a', favorites: { '86': { name: 'Real Madrid' }, '81': { name: 'Barça' } } }, { uid: 'b', favorites: { '81': { name: 'Barça' } } }]);
   const users = usersForMatch(by, { home: { id: 86 }, away: { id: 81 } });
   assert.deepEqual(users.map((u) => u.uid).sort(), ['a', 'b']);
+});
+
+test('aspecto: escudo del equipo que marcó, imagen del marcador, matchId para silenciar', () => {
+  const m = {
+    ...base, score: [0, 1],
+    home: { ...base.home, crest: 'https://a.espncdn.com/i/teamlogos/soccer/500/2919.png' },
+    away: { ...base.away, crest: 'https://a.espncdn.com/i/teamlogos/soccer/500/5264.png' },
+    events: [{ min: "9'", type: 'goal', side: 'away', player: 'Ramírez' }],
+  };
+  const [n] = matchNotifications(m, { status: 'live', keys: [] }).notifications;
+  assert.equal(n.kind, 'goal');
+  assert.equal(n.icon, m.away.crest);
+  assert.equal(n.matchId, 'col.1-1');
+  const img = new URL(n.image, 'https://x');
+  assert.equal(img.pathname, '/api/push-image');
+  assert.deepEqual([img.searchParams.get('k'), img.searchParams.get('s'), img.searchParams.get('x'), img.searchParams.get('m')], ['goal', '0-1', 'a', "9'"]);
 });
