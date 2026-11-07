@@ -1,8 +1,9 @@
 import { AppShell } from '@/components/layout/app-shell';
+import { FreshData } from '@/components/layout/fresh-data';
 import { AutoRefresh } from '@/components/layout/auto-refresh';
 import { SectionTabs } from '@/components/ui/section-tabs';
 import { MatchGroups } from '@/components/match/match-groups';
-import { getMatchesByStatus, getLiveCount } from '@/lib/api/matches';
+import { getMatchesByStatus, getLiveCount, getDataTime } from '@/lib/api/matches';
 import { siteConfig } from '@/config/site';
 
 export const metadata = { title: `Partidos · ${siteConfig.name}` };
@@ -14,6 +15,7 @@ export default async function MatchesPage() {
 
   return (
     <AppShell active="partidos" counts={{ live: liveCount }}>
+      <FreshData fetchedAt={await getDataTime()} />
       <AutoRefresh enabled={liveCount > 0} />
       <div className="flex max-w-3xl flex-col gap-5">
         <h1 className="text-[26px] font-black tracking-tight">Partidos</h1>

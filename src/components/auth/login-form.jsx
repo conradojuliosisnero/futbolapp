@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail } from '@/components/animate-ui/icons/mail';
 import { Lock } from '@/components/animate-ui/icons/lock';
 import { UserRound } from '@/components/animate-ui/icons/user-round';
@@ -54,7 +54,8 @@ function GoogleIcon() {
 export function LoginForm({ redirectTo = '/' }) {
   const router = useRouter();
   const user = useUser();
-  const [mode, setMode] = useState('login'); // 'login' | 'register' | 'reset'
+  const params = useSearchParams();
+  const [mode, setMode] = useState(params.get('modo') === 'registro' ? 'register' : 'login'); // 'login' | 'register' | 'reset'
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);

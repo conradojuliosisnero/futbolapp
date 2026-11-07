@@ -87,7 +87,9 @@ async function windowMatches() {
     ...LEAGUES.filter((l) => l.source === 'espn').map((l) => espn.leagueWindow(l)),
   ]);
   const fdMatches = await withRealMinute((data.matches ?? []).map(toMatch));
-  return [...fdMatches, ...espnLists.flat()];
+  const all = [...fdMatches, ...espnLists.flat()];
+  Object.defineProperty(all, 'fetchedAt', { value: data.fetchedAt });
+  return all;
 }
 
 /** football-data gratis no trae el minuto: si ESPN tiene el mismo partido en vivo, se usa su reloj (y su marcador). */
@@ -249,6 +251,11 @@ export async function getMatch(id, { details = false } = {}) {
     catch (e) { if (/ (400|404) /.test(e.message)) return null; throw e; }
   }
   return details ? withDetails(match) : match;
+}
+
+/** Cuándo se consultaron de verdad los partidos (para recargar si la caché entregó datos viejos). */
+export async function getDataTime() {
+  return (await windowMatches()).fetchedAt ?? Date.now();
 }
 
 export async function getLiveCount() {

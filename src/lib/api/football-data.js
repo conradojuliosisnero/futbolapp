@@ -28,5 +28,8 @@ export async function fd(path, { revalidate = 60 } = {}, retried = false) {
     const body = await res.json().catch(() => ({}));
     throw new Error(`football-data ${res.status} en ${path}: ${body.message ?? res.statusText}`);
   }
-  return res.json();
+  const json = await res.json();
+  // Hora real de la consulta (la caché de Next guarda la respuesta con su cabecera Date).
+  Object.defineProperty(json, 'fetchedAt', { value: Date.parse(res.headers.get('date') ?? '') || Date.now() });
+  return json;
 }

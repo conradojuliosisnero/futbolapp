@@ -1,6 +1,7 @@
 import 'server-only';
 import { sameTeam } from './team-match.mjs';
 import { DAY, dayKey, time, dayLabel } from './dates';
+import { placeStarters } from './espn-lineup.mjs';
 
 // Cliente de ESPN (API pública NO oficial, sin clave). Puede cambiar o cerrarse sin aviso: todo lo que viene de aquí
 // es opcional y, si falla, devuelve null/[] para que la app siga con football-data y API-Football.
@@ -109,28 +110,12 @@ const STATS = [
 ];
 const INFO_EVENTS = new Set(['kickoff', 'halftime', 'start-2nd-half', 'end-regular-time', 'full-time', 'start-extra-time', 'end-extra-time']);
 
-// Ubica a cada titular en la cancha: línea según la posición, lado (izq → der) según "Left/Right".
-const depth = (n = '') => (/Goalkeeper/.test(n) ? 0 : /Back|Defender|Sweeper/.test(n) ? 1 : /Defensive Midfield/.test(n) ? 2
-  : /Attacking Midfield/.test(n) ? 4 : /Midfield/.test(n) ? 3 : /Wing/.test(n) ? 5 : 6);
-const lateral = (n = '') => (/Center Left/.test(n) ? 1 : /Center Right/.test(n) ? 3 : /Left/.test(n) ? 0 : /Right/.test(n) ? 4 : 2);
-
 function toLineup(side) {
-  const starters = side.roster.filter((p) => p.starter);
-  const counts = (side.formation ?? '').split('-').map(Number).filter(Boolean);
-  const gk = starters.filter((p) => depth(p.position?.name) === 0);
-  const field = starters.filter((p) => depth(p.position?.name) !== 0).sort((a, b) => depth(a.position?.name) - depth(b.position?.name));
-  const rows = [];
-  let i = 0;
-  for (const n of counts.length ? counts : [field.length]) { rows.push(field.slice(i, i + n)); i += n; }
-  if (i < field.length) rows.push(field.slice(i)); // por si la formación no cuadra con los datos
   const player = (p, grid) => ({ id: null, number: p.jersey ? Number(p.jersey) : null, name: p.athlete?.displayName ?? '', pos: p.position?.abbreviation ?? '', grid, photo: p.athlete?.headshot?.href ?? null });
   return {
     formation: side.formation ?? '',
     coach: null,
-    startXI: [
-      ...gk.map((p) => player(p, '1:1')),
-      ...rows.flatMap((row, r) => [...row].sort((a, b) => lateral(a.position?.name) - lateral(b.position?.name)).map((p, c) => player(p, `${r + 2}:${c + 1}`))),
-    ],
+    startXI: placeStarters(side.roster.filter((p) => p.starter), side.formation ?? '').map(({ p, grid }) => player(p, grid)),
     subs: side.roster.filter((p) => !p.starter).map((p) => player(p, null)),
   };
 }

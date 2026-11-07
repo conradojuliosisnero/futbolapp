@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/app-shell';
+import { FreshData } from '@/components/layout/fresh-data';
 import { AutoRefresh } from '@/components/layout/auto-refresh';
 import { TeamView } from '@/components/team/team-view';
-import { getTeamPage, getTeamNews, getLiveCount } from '@/lib/api/matches';
+import { getTeamPage, getTeamNews, getLiveCount, getDataTime } from '@/lib/api/matches';
 import { DEFAULT_TEAM } from '@/config/leagues';
 import { siteConfig } from '@/config/site';
 
@@ -12,6 +13,7 @@ export default async function MyTeamPage() {
   const [data, liveCount] = await Promise.all([getTeamPage(DEFAULT_TEAM.id), getLiveCount()]);
   return (
     <AppShell active="mi-equipo" counts={{ live: liveCount }}>
+      <FreshData fetchedAt={await getDataTime()} />
       {data ? (
         <>
           <AutoRefresh enabled={data.live.length > 0} />

@@ -6,6 +6,7 @@ import { TeamCrest } from '@/components/ui/team-crest';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { InstallCard } from '@/components/pwa/install-card';
 import { AnimatedLink } from '@/components/ui/animated-link';
+import { UserMenu } from '@/components/auth/user-menu';
 import { cn } from '@/lib/utils';
 
 export function Sidebar({ active, counts = {} }) {
@@ -53,6 +54,7 @@ export function Sidebar({ active, counts = {} }) {
       </div>
 
       <div className="mt-auto hidden xl:flex"><InstallCard /></div>
+      <div className="mt-auto w-full xl:mt-0"><UserMenu variant="full" side="right" align="end" /></div>
     </nav>
   );
 }
