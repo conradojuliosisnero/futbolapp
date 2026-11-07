@@ -104,7 +104,7 @@ async function withRealMinute(matches) {
   return matches.map((m) => {
     if (m.status !== 'live') return m;
     const e = boards[m.leagueId]?.find((x) => x.status === 'live' && sameTeam(x.home.name, m.home.name) && sameTeam(x.away.name, m.away.name));
-    return e ? { ...m, minute: e.minute, clock: e.clock, label: e.label, progress: e.progress, score: e.score } : m;
+    return e ? { ...m, minute: e.minute, clock: e.clock, liveClock: e.liveClock, label: e.label, progress: e.progress, score: e.score } : m;
   });
 }
 

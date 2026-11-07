@@ -28,7 +28,7 @@ export default async function RoomPage({ params }) {
   return (
     <AppShell active="en-vivo" counts={{ live: liveCount }} aside={<MatchTabs match={match} />} asideWide>
       <FreshData fetchedAt={await getDataTime()} />
-      <AutoRefresh enabled={match.status === 'live'} />
+      <AutoRefresh enabled={match.status === 'live'} seconds={20} />
       <div className="flex flex-col gap-4">
         <LiveMoments match={match} />
         <div className="flex items-center justify-between gap-3">

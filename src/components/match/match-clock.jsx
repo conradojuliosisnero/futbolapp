@@ -1,4 +1,5 @@
 import { LiveBadge } from '@/components/ui/live-badge';
+import { LiveMinute } from './live-minute';
 import { cn } from '@/lib/utils';
 
 // "67'" → 67 · "45'+4'" → 45 · "MT" → 45
@@ -42,7 +43,7 @@ export function MatchClock({ match }) {
           live ? 'text-primary' : 'text-foreground',
         )}
       >
-        {big}
+        {live ? <LiveMinute clock={match.liveClock} fallback={big} /> : big}
       </span>
       <span className="text-sm font-semibold text-muted-foreground">{sub}</span>
 

@@ -30,7 +30,7 @@ export default async function MatchPage({ params }) {
   return (
     <AppShell active="en-vivo" counts={{ live: liveCount }} aside={<MatchTabs match={match} />} asideWide>
       <FreshData fetchedAt={await getDataTime()} />
-      <AutoRefresh enabled={match.status === 'live'} />
+      <AutoRefresh enabled={match.status === 'live'} seconds={20} />
       <div className="flex flex-col gap-5">
         <LiveMoments match={match} />
         <PlayToasts match={match} />

@@ -13,7 +13,12 @@ async function espn(url, revalidate) {
   try {
     const res = await fetch(`${url}${url.includes('?') ? '&' : '?'}lang=es&region=co`, { next: { revalidate } });
     if (!res.ok) { console.warn('ESPN', res.status, url); return null; }
-    return await res.json();
+    const json = await res.json();
+    // Cuándo respondió ESPN de verdad (la caché guarda el header Date): el reloj en vivo avanza desde ahí.
+    const at = Date.parse(res.headers.get('date') ?? '') || Date.now();
+    if (Array.isArray(json?.events)) json.events.forEach((e) => { e.__at = at; });
+    if (json?.header) json.header.__at = at;
+    return json;
   } catch (e) {
     console.warn('ESPN no respondió:', e.message);
     return null;
@@ -50,6 +55,8 @@ export function toMatch(ev, slug, league) {
   const status = type.state === 'in' ? 'live' : type.state === 'post' && type.completed ? 'finished' : 'scheduled';
   const date = Date.parse(ev.date ?? comp.date);
   const minute = status === 'live' ? (type.name === 'STATUS_HALFTIME' ? 'MT' : st.displayClock || 'EN VIVO') : null;
+  // Para que el minuto avance solo en pantalla entre actualizaciones (ver live-clock.mjs).
+  const liveClock = minute && minute !== 'MT' && ev.__at ? { minute, seconds: st.clock ?? null, period: st.period ?? null, at: ev.__at } : null;
   const other = { STATUS_POSTPONED: 'Aplaz.', STATUS_CANCELED: 'Canc.', STATUS_SUSPENDED: 'Susp.' }[type.name];
   return {
     id: espnId(slug, ev.id),
@@ -61,6 +68,7 @@ export function toMatch(ev, slug, league) {
     status,
     minute,
     clock: minute,
+    liveClock,
     progress: minute ? Math.min(1, (parseInt(minute, 10) || 45) / 90) : 0,
     kickoff: time(date),
     day: dayLabel(date),
@@ -74,10 +82,10 @@ export function toMatch(ev, slug, league) {
 // ---------- partidos ----------
 const ymd = (date) => dayKey(date).replace(/-/g, '');
 
-/** Partidos de un día. Hoy se refresca cada minuto; días pasados 1 h; futuros 30 min. */
+/** Partidos de un día. Hoy se refresca cada 15 s (marcador y minuto en vivo); días pasados 1 h; futuros 30 min. */
 export async function scoreboard(slug, date = Date.now()) {
   const today = dayKey(Date.now()), k = dayKey(date);
-  const revalidate = k === today ? 60 : k < today ? 3600 : 1800;
+  const revalidate = k === today ? 15 : k < today ? 3600 : 1800;
   return (await espn(`${SITE}/${slug}/scoreboard?dates=${ymd(date)}`, revalidate))?.events ?? [];
 }
 
@@ -122,7 +130,7 @@ function toLineup(side) {
 
 /** Eventos, relato, estadísticas y alineaciones de un partido de ESPN. */
 export async function matchDetails(slug, eventId, status) {
-  const revalidate = status === 'live' ? 60 : status === 'finished' ? 3600 : 600;
+  const revalidate = status === 'live' ? 15 : status === 'finished' ? 3600 : 600;
   const sum = await espn(`${SITE}/${slug}/summary?event=${eventId}`, revalidate);
   if (!sum) return null;
   const comp = sum.header?.competitions?.[0];
@@ -165,7 +173,7 @@ export async function matchDetails(slug, eventId, status) {
 
   const goals = (side) => events.filter((e) => e.type === 'goal' && e.side === side).map((e) => `${e.player ?? ''} ${e.min}`).reverse();
   return {
-    header: comp ? { id: sum.header.id, date: comp.date, competitions: [comp] } : null,
+    header: comp ? { id: sum.header.id, date: comp.date, competitions: [comp], __at: sum.header.__at } : null,
     events,
     commentary,
     stats,
