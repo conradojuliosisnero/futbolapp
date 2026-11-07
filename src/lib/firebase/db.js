@@ -75,7 +75,8 @@ export async function removePushSubscription(uid, endpoint) {
 
 /** Escucha el documento del usuario (favoriteTeam, notify, follows). Devuelve la función para dejar de escuchar. */
 export function watchUserDoc(uid, cb) {
-  return onSnapshot(doc(db, 'users', uid), (snap) => cb(snap.data() ?? null), () => cb(null));
+  // cb(datos, existe): existe=false solo si el documento realmente no está (no ante errores de red o permisos).
+  return onSnapshot(doc(db, 'users', uid), (snap) => cb(snap.data() ?? null, snap.exists()), () => cb(null, undefined));
 }
 
 /** Escucha la bandeja de avisos (los 50 más recientes). */

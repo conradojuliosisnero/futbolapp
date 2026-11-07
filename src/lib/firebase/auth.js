@@ -6,8 +6,8 @@ import {
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from './client';
 
-// Crea users/{uid} la primera vez que entra (con email o con Google).
-async function ensureUserDoc(user) {
+// Crea users/{uid} la primera vez que entra (con email o con Google). También se usa si al entrar falta el documento.
+export async function ensureUserDoc(user) {
   const ref = doc(db, 'users', user.uid);
   if ((await getDoc(ref)).exists()) return;
   await setDoc(ref, {

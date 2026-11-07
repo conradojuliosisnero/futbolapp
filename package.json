@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "node --test \"src/**/*.test.mjs\"",
-    "test:rules": "npx --yes firebase-tools@13 emulators:exec --only firestore --project demo-minuto90 \"node --test tests/rules/rooms.test.mjs\""
+    "test:rules": "npx --yes firebase-tools@13 emulators:exec --only firestore --project demo-minuto90 \"node --test tests/rules/rooms.test.mjs tests/rules/users.test.mjs\""
   },
   "dependencies": {
     "@animate-ui/react": "^2.4.2",

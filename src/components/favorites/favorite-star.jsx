@@ -14,21 +14,24 @@ export function FavoriteStar({ team, withLabel = true, className }) {
   const { user, profile } = useUserDoc();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   if (!firebaseReady || user === undefined) return null;
 
   const on = Boolean(profile?.favorites?.[String(team.id)]);
   const toggle = async () => {
     if (!user) return router.push('/entrar');
-    setBusy(true);
+    setBusy(true); setError('');
     try {
       if (on) await removeFavorite(user.uid, team.id, { wasMyTeam: profile?.favoriteTeam?.id === String(team.id) });
       else await addFavorite(user.uid, team);
     } catch (e) {
       console.warn('No se pudo actualizar favoritos', e.code ?? e);
+      setError('No se pudo guardar. Intenta de nuevo en un momento.');
     } finally { setBusy(false); }
   };
 
   return (
+    <span className="inline-flex flex-col items-start gap-1">
     <AnimateIcon animateOnTap animateOnHover asChild>
       <button
         type="button"
@@ -46,5 +49,7 @@ export function FavoriteStar({ team, withLabel = true, className }) {
         {withLabel && (on ? 'Favorito' : 'Agregar a favoritos')}
       </button>
     </AnimateIcon>
+    {error && <span role="alert" className="text-xs text-destructive">{error}</span>}
+    </span>
   );
 }

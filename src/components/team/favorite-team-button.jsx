@@ -12,6 +12,7 @@ import { firebaseReady } from '@/lib/firebase/client';
 export function FavoriteTeamButton({ team }) {
   const { user, profile } = useUserDoc();
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   if (!firebaseReady || user === undefined) return null;
 
   if (!user) {
@@ -24,15 +25,21 @@ export function FavoriteTeamButton({ team }) {
   const mine = profile?.favoriteTeam?.id === String(team.id);
   const choose = async () => {
     setBusy(true);
-    try { await setFavoriteTeam(user.uid, team); } finally { setBusy(false); }
+    setError('');
+    try { await setFavoriteTeam(user.uid, team); }
+    catch (e) { console.warn('No se pudo elegir mi equipo', e.code ?? e); setError('No se pudo guardar. Intenta de nuevo en un momento.'); }
+    finally { setBusy(false); }
   };
   return mine ? (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1.5 text-sm font-bold text-primary animate-in zoom-in-90 duration-300">
       <Star animate className="size-4 fill-current" /> Mi equipo
     </span>
   ) : (
-    <Button variant="secondary" size="sm" disabled={busy} onClick={choose} className="rounded-full">
-      <Star /> Hacer mi equipo
-    </Button>
+    <span className="inline-flex flex-col items-start gap-1">
+      <Button variant="secondary" size="sm" disabled={busy} onClick={choose} className="rounded-full">
+        <Star /> Hacer mi equipo
+      </Button>
+      {error && <span role="alert" className="text-xs text-destructive">{error}</span>}
+    </span>
   );
 }
