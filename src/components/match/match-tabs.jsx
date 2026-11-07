@@ -2,7 +2,7 @@ import { Goal, ArrowLeftRight } from 'lucide-react';
 import { SectionTabs } from '@/components/ui/section-tabs';
 import { SplitBar } from '@/components/ui/split-bar';
 import { Media } from '@/components/ui/media';
-import { cn } from '@/lib/utils';
+import { cn, ENTER, stagger } from '@/lib/utils';
 
 function Timeline({ events = [] }) {
   return (
@@ -11,7 +11,7 @@ function Timeline({ events = [] }) {
         const hot = e.type === 'goal';
         const card = e.type === 'yellow' || e.type === 'red';
         return (
-          <li key={`${e.min}-${i}`} className="grid grid-cols-[44px_1fr] gap-3 border-b py-3.5 last:border-b-0">
+          <li key={`${e.min}-${i}`} style={stagger(i)} className={cn(ENTER, 'grid grid-cols-[44px_1fr] gap-3 border-b py-3.5 last:border-b-0')}>
             <span className={cn('text-sm font-bold', hot ? 'font-extrabold text-primary' : 'text-subtle')}>{e.min}</span>
             <div className="flex min-w-0 flex-col gap-2">
               <div className={cn('flex items-center gap-2 font-semibold', hot ? 'text-base font-extrabold' : 'text-[15px]')}>

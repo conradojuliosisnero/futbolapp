@@ -1,5 +1,5 @@
 import { TeamCrest } from '@/components/ui/team-crest';
-import { cn } from '@/lib/utils';
+import { cn, ENTER, stagger } from '@/lib/utils';
 
 const FORM = { G: 'bg-primary text-primary-foreground', E: 'bg-neutral-2', P: 'bg-live text-live-foreground' };
 
@@ -32,7 +32,7 @@ export function StandingsTable({ rows, highlight }) {
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={r.team.code} className={cn('border-t', r.team.code === highlight && 'bg-secondary')}>
+            <tr key={r.team.code} style={stagger(i)} className={cn(ENTER, 'border-t transition-colors hover:bg-secondary/60', r.team.code === highlight && 'bg-secondary')}>
               <td className={cn('py-3 font-bold', i === 0 ? 'text-primary' : 'text-subtle')}>{i + 1}</td>
               <td className="py-3">
                 <span className="flex items-center gap-2.5 font-semibold">

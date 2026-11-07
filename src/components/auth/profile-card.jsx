@@ -3,8 +3,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { LogOut, Bell, Shield, ChevronRight, UserRound, Mail } from 'lucide-react';
+import { LogOut } from '@/components/animate-ui/icons/log-out';
+import { Bell } from '@/components/animate-ui/icons/bell';
+import { Star } from '@/components/animate-ui/icons/star';
+import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
+import { UserRound } from '@/components/animate-ui/icons/user-round';
+import { Mail } from '@/components/animate-ui/icons/mail';
 import { Button } from '@/components/ui/button';
+import { AnimatedLink } from '@/components/ui/animated-link';
+import { ENTER } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
@@ -15,7 +22,7 @@ import { firebaseReady } from '@/lib/firebase/client';
 import { signOut } from '@/lib/firebase/auth';
 
 const LINKS = [
-  { href: '/mi-equipo', label: 'Mi equipo', icon: Shield },
+  { href: '/mi-equipo', label: 'Mi equipo', icon: Star },
   { href: '/notificaciones', label: 'Notificaciones', icon: Bell },
 ];
 
@@ -23,9 +30,9 @@ function Links() {
   return (
     <nav className="flex flex-col rounded-3xl bg-card px-2">
       {LINKS.map(({ href, label, icon: Icon }) => (
-        <Link key={href} href={href} className="flex items-center gap-3 border-b px-3 py-4 text-sm font-semibold last:border-b-0 hover:text-primary">
-          <Icon className="size-4.5 text-subtle" aria-hidden />{label}<ChevronRight className="ml-auto size-4 text-faint" aria-hidden />
-        </Link>
+        <AnimatedLink key={href} href={href} className="group flex items-center gap-3 border-b px-3 py-4 text-sm font-semibold transition-colors last:border-b-0 hover:text-primary">
+          <Icon className="size-4.5 text-subtle transition-colors group-hover:text-primary" aria-hidden />{label}<ChevronRight className="ml-auto size-4 text-faint transition-transform group-hover:translate-x-0.5" aria-hidden />
+        </AnimatedLink>
       ))}
     </nav>
   );
@@ -33,8 +40,8 @@ function Links() {
 
 function Guest({ text }) {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-3xl bg-card px-6 py-10 text-center">
-      <span className="grid size-16 place-items-center rounded-full bg-secondary"><UserRound className="size-7 text-subtle" aria-hidden /></span>
+    <div className={`${ENTER} flex flex-col items-center gap-4 rounded-3xl bg-card px-6 py-10 text-center`}>
+      <span className="grid size-16 place-items-center rounded-full bg-secondary"><UserRound animate className="size-7 text-subtle" aria-hidden /></span>
       <div className="flex flex-col gap-1.5">
         <h2 className="text-lg font-extrabold">No has iniciado sesión</h2>
         <p className="max-w-xs text-sm text-muted-foreground">{text}</p>
@@ -73,7 +80,7 @@ export function ProfileCard() {
 
   return (
     <>
-      <div className="flex items-center gap-4 rounded-3xl bg-card p-6">
+      <div className={`${ENTER} flex items-center gap-4 rounded-3xl bg-card p-6`}>
         {user.photoURL
           // eslint-disable-next-line @next/next/no-img-element -- foto de Google, dominio externo
           ? <img src={user.photoURL} alt="" className="size-16 rounded-full object-cover" referrerPolicy="no-referrer" />

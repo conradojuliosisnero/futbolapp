@@ -12,7 +12,7 @@ export function MatchGroups({ groups, empty = 'No hay partidos.' }) {
             <span>{g.league} <span className="text-subtle">· {g.matches.length}</span></span>
           </AccordionTrigger>
           <AccordionContent className="flex h-auto flex-col gap-2 pb-2 [&_a]:no-underline">
-            {g.matches.map((m) => <MatchRow key={m.id} match={m} />)}
+            {g.matches.map((m, i) => <MatchRow key={m.id} match={m} index={i} />)}
           </AccordionContent>
         </AccordionItem>
       ))}

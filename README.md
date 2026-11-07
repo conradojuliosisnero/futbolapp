@@ -67,6 +67,9 @@ public/sw.js          service worker (red primero, cache de respaldo)
 - Una sola base: Tailwind + shadcn/ui. Sin CSS Modules.
 - Un componente = un archivo en kebab-case con export con nombre: `import { Button } from '@/components/ui/button'`.
 - Componentes nuevos de shadcn: `npx shadcn@latest add <nombre>` y luego `npx @animate-ui/cli@latest animate all` para animarlos.
+- Iconos: usa los **animados** de `src/components/animate-ui/icons/` (Animate UI). Para agregar uno: `npx shadcn@latest add https://animate-ui.com/r/icons-lucide-<nombre>.json`. Solo si no existe animado, usa `lucide-react`.
+- Microinteracciones: `Button` y `AnimatedLink` animan solos los iconos de adentro al pasar el cursor o tocar. Para listas usa `ENTER` + `stagger(i)` de `lib/utils.js`. Todo respeta "reducir movimiento" del sistema.
+- No uses `npx shadcn add ... -o`: sobrescribe componentes ya personalizados (por ejemplo `button.jsx`).
 - `'use client'` solo donde hay estado o eventos del navegador.
 - Colores siempre con las clases del tema (`bg-card`, `text-primary`, `text-live`…), nunca hex sueltos en componentes.
 

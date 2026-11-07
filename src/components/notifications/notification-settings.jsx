@@ -1,7 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { BellRing, Smartphone, Send, BellOff } from 'lucide-react';
+import { BellRing } from '@/components/animate-ui/icons/bell-ring';
+import { Smartphone } from '@/components/animate-ui/icons/smartphone';
+import { Send } from '@/components/animate-ui/icons/send';
+import { BellOff } from '@/components/animate-ui/icons/bell-off';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -53,7 +56,7 @@ function PushCard() {
   return (
     <div className="flex flex-col gap-4 rounded-3xl bg-card p-5">
       <div className="flex items-start gap-3.5">
-        <span className="grid size-11 flex-none place-items-center rounded-full bg-primary text-primary-foreground"><Smartphone className="size-5" aria-hidden /></span>
+        <span className="grid size-11 flex-none place-items-center rounded-full bg-primary text-primary-foreground"><Smartphone animateOnView className="size-5" aria-hidden /></span>
         <div className="flex flex-col gap-1">
           <h2 className="text-base font-extrabold">Notificaciones push</h2>
           <p className="text-md text-muted-foreground">Avisos en tu celular o computador aunque la app esté cerrada.</p>
@@ -71,7 +74,7 @@ function PushCard() {
           <Button size="touch" variant="outline" onClick={disable} disabled={busy}><BellOff /> Desactivar</Button>
         </div>
       )}
-      {msg && <p role="status" className="text-md text-primary">{msg}</p>}
+      {msg && <p role="status" key={msg} className="text-md text-primary animate-in fade-in-0 slide-in-from-top-1 duration-300">{msg}</p>}
     </div>
   );
 }

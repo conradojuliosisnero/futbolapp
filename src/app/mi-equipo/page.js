@@ -59,7 +59,7 @@ export default async function MyTeamPage() {
             {
               value: 'matches',
               label: 'Partidos',
-              content: <div className="flex flex-col gap-2">{sorted.map((m) => <MatchRow key={m.id} match={m} highlighted={m.status === 'live'} />)}</div>,
+              content: <div className="flex flex-col gap-2">{sorted.map((m, i) => <MatchRow key={m.id} match={m} index={i} highlighted={m.status === 'live'} />)}</div>,
             },
             { value: 'table', label: 'Tabla', content: <StandingsTable rows={standings} highlight={team.code} /> },
           ]}

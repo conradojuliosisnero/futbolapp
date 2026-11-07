@@ -1,6 +1,7 @@
 'use client';
 
-import { TriangleAlert, RefreshCw } from 'lucide-react';
+import { TriangleAlert } from '@/components/animate-ui/icons/triangle-alert';
+import { RefreshCw } from '@/components/animate-ui/icons/refresh-cw';
 import { Button } from '@/components/ui/button';
 import { StatusScreen } from '@/components/ui/status-screen';
 import '@/styles/globals.css';

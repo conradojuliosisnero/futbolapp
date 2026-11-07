@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import { NAV_ITEMS } from '@/config/navigation';
+import { AnimatedLink } from '@/components/ui/animated-link';
 import { cn } from '@/lib/utils';
 
 export function BottomNav({ active }) {
@@ -11,15 +11,16 @@ export function BottomNav({ active }) {
       {NAV_ITEMS.filter((i) => i.mobile).map((item) => {
         const on = item.id === active || (active === 'en-vivo' && item.id === 'partidos');
         return (
-          <Link
+          <AnimatedLink
             key={item.id}
             href={item.href}
+            animate={on}
             aria-current={on ? 'page' : undefined}
-            className={cn('flex min-h-11 min-w-16 flex-col items-center justify-center gap-1 text-xs font-semibold', on ? 'text-primary' : 'text-subtle')}
+            className={cn('flex min-h-11 min-w-16 flex-col items-center justify-center gap-1 text-xs font-semibold transition-colors', on ? 'text-primary' : 'text-subtle')}
           >
-            <item.icon aria-hidden className={cn('size-5', on && 'fill-primary/15')} />
+            <item.icon aria-hidden className="size-5" />
             {item.label}
-          </Link>
+          </AnimatedLink>
         );
       })}
     </nav>

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Play } from 'lucide-react';
+import { Play } from '@/components/animate-ui/icons/play';
 import { Button } from '@/components/ui/button';
 import { LiveBadge } from '@/components/ui/live-badge';
 import { TeamCrest } from '@/components/ui/team-crest';

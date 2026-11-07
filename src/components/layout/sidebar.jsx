@@ -5,6 +5,7 @@ import { Logo } from '@/components/ui/logo';
 import { TeamCrest } from '@/components/ui/team-crest';
 import { Eyebrow } from '@/components/ui/eyebrow';
 import { InstallCard } from '@/components/pwa/install-card';
+import { AnimatedLink } from '@/components/ui/animated-link';
 import { cn } from '@/lib/utils';
 
 export function Sidebar({ active, counts = {} }) {
@@ -22,12 +23,13 @@ export function Sidebar({ active, counts = {} }) {
           const count = item.badgeKey && counts[item.badgeKey];
           return (
             <li key={item.id}>
-              <Link
+              <AnimatedLink
                 href={item.href}
+                animate={on}
                 title={item.label}
                 aria-current={on ? 'page' : undefined}
                 className={cn(
-                  'flex size-13 items-center justify-center rounded-2xl text-[15px] font-semibold text-muted-foreground hover:bg-card hover:text-foreground',
+                  'flex size-13 items-center justify-center rounded-2xl text-[15px] font-semibold text-muted-foreground transition-colors hover:bg-card hover:text-foreground',
                   'xl:size-auto xl:justify-start xl:gap-3 xl:px-3.5 xl:py-3',
                   on && 'bg-secondary text-primary xl:text-foreground',
                 )}
@@ -35,7 +37,7 @@ export function Sidebar({ active, counts = {} }) {
                 <item.icon aria-hidden className={cn('size-5 shrink-0 xl:size-4', on && 'xl:text-primary')} />
                 <span className="hidden xl:inline">{item.label}</span>
                 {count ? <Badge variant="live" className="ml-auto hidden xl:inline-flex">{count}</Badge> : null}
-              </Link>
+              </AnimatedLink>
             </li>
           );
         })}

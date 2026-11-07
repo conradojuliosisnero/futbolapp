@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { SplitBar } from '@/components/ui/split-bar';
+import { Check } from '@/components/animate-ui/icons/check';
 import { cn } from '@/lib/utils';
 
 export function PredictionBar({ match, title = '¿Quién gana?', onVote }) {
@@ -27,9 +28,10 @@ export function PredictionBar({ match, title = '¿Quién gana?', onVote }) {
             type="button"
             onClick={() => choose(o.id)}
             aria-pressed={vote === o.id}
-            className={cn('min-h-8', o.muted && 'text-subtle', vote === o.id && 'text-primary underline underline-offset-4')}
+            className={cn('flex min-h-8 items-center gap-1 transition-[color,transform] active:scale-90', o.muted && 'text-subtle', vote === o.id && 'text-primary')}
           >
-            {o.label}
+            {vote === o.id && <Check animate className="size-4 animate-in zoom-in-50 duration-300" aria-hidden />}
+            <span key={vote === o.id ? 'on' : 'off'} className={cn(vote === o.id && 'animate-in zoom-in-90 duration-300')}>{o.label}</span>
           </button>
         ))}
       </div>

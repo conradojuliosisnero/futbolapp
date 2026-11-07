@@ -1,5 +1,7 @@
 import Link from 'next/link';
-import { Bell, UserRound } from 'lucide-react';
+import { Bell } from '@/components/animate-ui/icons/bell';
+import { UserRound } from '@/components/animate-ui/icons/user-round';
+import { AnimatedLink } from '@/components/ui/animated-link';
 import { Logo } from '@/components/ui/logo';
 import { cn } from '@/lib/utils';
 
@@ -10,8 +12,8 @@ export function MobileHeader({ active }) {
     <header className="mb-4 flex items-center justify-between md:hidden">
       <Link href="/" aria-label="Inicio"><Logo /></Link>
       <div className="flex items-center gap-2.5">
-        <Link href="/notificaciones" aria-label="Notificaciones" className={btn(active === 'notificaciones')}><Bell className="size-5" /></Link>
-        <Link href="/perfil" aria-label="Perfil" className={btn(active === 'perfil')}><UserRound className="size-5" /></Link>
+        <AnimatedLink href="/notificaciones" aria-label="Notificaciones" className={btn(active === 'notificaciones')}><Bell className="size-5" /></AnimatedLink>
+        <AnimatedLink href="/perfil" aria-label="Perfil" className={btn(active === 'perfil')}><UserRound className="size-5" /></AnimatedLink>
       </div>
     </header>
   );

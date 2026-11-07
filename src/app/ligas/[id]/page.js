@@ -40,7 +40,7 @@ export default async function LeaguePage({ params }) {
               label: 'Partidos',
               content: (
                 <div className="flex flex-col gap-2">
-                  {league.matches.map((m) => <MatchRow key={m.id} match={m} />)}
+                  {league.matches.map((m, i) => <MatchRow key={m.id} match={m} index={i} />)}
                 </div>
               ),
             },

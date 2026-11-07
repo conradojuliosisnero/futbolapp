@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { TriangleAlert, RefreshCw } from 'lucide-react';
+import { TriangleAlert } from '@/components/animate-ui/icons/triangle-alert';
+import { RefreshCw } from '@/components/animate-ui/icons/refresh-cw';
 import { AppShell } from '@/components/layout/app-shell';
 import { Button } from '@/components/ui/button';
 import { StatusScreen } from '@/components/ui/status-screen';

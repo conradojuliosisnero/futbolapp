@@ -1,7 +1,8 @@
-import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight } from '@/components/animate-ui/icons/chevron-right';
 import { AppShell } from '@/components/layout/app-shell';
 import { LiveBadge } from '@/components/ui/live-badge';
+import { AnimatedLink } from '@/components/ui/animated-link';
+import { cn, ENTER, stagger } from '@/lib/utils';
 import { getLeagues, getLiveCount } from '@/lib/api/matches';
 import { siteConfig } from '@/config/site';
 
@@ -15,11 +16,12 @@ export default async function LeaguesPage() {
       <div className="flex flex-col gap-5">
         <h1 className="text-[26px] font-black tracking-tight">Ligas</h1>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {leagues.map((l) => (
-            <Link
+          {leagues.map((l, i) => (
+            <AnimatedLink
               key={l.id}
               href={`/ligas/${l.id}`}
-              className="group flex items-center gap-4 rounded-2xl bg-card p-5 transition-colors hover:bg-secondary hover:text-inherit"
+              style={stagger(i)}
+              className={cn(ENTER, 'group flex items-center gap-4 rounded-2xl bg-card p-5 transition-[background-color,transform] hover:bg-secondary hover:text-inherit')}
             >
               <span className="grid size-13 flex-none place-items-center rounded-full bg-neutral-1 text-sm font-black">{l.short}</span>
               <span className="flex min-w-0 flex-1 flex-col gap-1">
@@ -31,7 +33,7 @@ export default async function LeaguesPage() {
                 </span>
               </span>
               <ChevronRight className="size-5 text-faint transition-transform group-hover:translate-x-0.5" />
-            </Link>
+            </AnimatedLink>
           ))}
         </div>
       </div>
