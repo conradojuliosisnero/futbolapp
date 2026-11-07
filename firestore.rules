@@ -27,6 +27,8 @@ rules_version = '2';
 //   read: bool
 //   createdAt: timestamp
 //
+// notifyState/{id}                    lo ya avisado por partido/equipo (solo el servidor; sin acceso desde la app)
+//
 // predictions/{matchId}/votes/{uid}    un voto por usuario y partido
 //   pick: 'home' | 'draw' | 'away'
 //   at: timestamp
@@ -52,7 +54,7 @@ service cloud.firestore {
 
       match /pushSubscriptions/{id} {
         allow read, delete: if isOwner(uid);
-        allow create: if isOwner(uid)
+        allow create, update: if isOwner(uid)
           && request.resource.data.keys().hasOnly(['endpoint', 'keys', 'userAgent', 'createdAt'])
           && request.resource.data.endpoint is string
           && request.resource.data.endpoint.matches('https://.*')

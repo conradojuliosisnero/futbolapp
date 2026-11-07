@@ -3,6 +3,7 @@ import { Sidebar } from './sidebar';
 import { BottomNav } from './bottom-nav';
 import { MobileHeader } from './mobile-header';
 import { PageTransition } from './page-transition';
+import { InstallBanner } from '@/components/pwa/install-banner';
 
 /**
  * Estructura responsive:
@@ -31,6 +32,7 @@ export function AppShell({ active, counts = {}, aside, asideWide = false, childr
           {aside}
         </aside>
       )}
+      <InstallBanner />
       <BottomNav active={active} />
     </div>
   );

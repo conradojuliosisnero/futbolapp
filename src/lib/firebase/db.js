@@ -1,8 +1,8 @@
 // Datos del usuario en Firestore. Los partidos/ligas vienen de la API de fútbol, aquí solo sus ids.
 // Estructura completa en firestore.rules (comentario de cabecera).
 import {
-  doc, setDoc, updateDoc, deleteField, serverTimestamp,
-  collection, query, where, getCountFromServer,
+  doc, setDoc, updateDoc, deleteDoc, deleteField, serverTimestamp, onSnapshot,
+  collection, query, where, orderBy, limit, getCountFromServer,
 } from 'firebase/firestore';
 import { db } from './client';
 
@@ -28,4 +28,51 @@ export async function getVotes(matchId) {
   const count = async (pick) => (await getCountFromServer(query(votes, where('pick', '==', pick)))).data().count;
   const [home, draw, away] = await Promise.all(['home', 'draw', 'away'].map(count));
   return { home, draw, away, total: home + draw + away };
+}
+
+// ---------- mi equipo, avisos y dispositivos ----------
+
+/** Equipo de "Mi equipo" (también lo usa el servidor para saber a quién avisar). team: { id, name, crest, league } */
+export function setFavoriteTeam(uid, team) {
+  return updateDoc(doc(db, 'users', uid), {
+    favoriteTeam: { id: String(team.id), name: team.name, crest: team.crest ?? null, league: team.league ?? null },
+  });
+}
+
+/** Qué avisos quiere el usuario. prefs: { goals, kickoff, final, redCards, reminders, teamNews } */
+export function saveNotifyPrefs(uid, prefs) {
+  return updateDoc(doc(db, 'users', uid), { notify: prefs });
+}
+
+// El id del documento es un hash del endpoint: el mismo dispositivo no se guarda dos veces.
+async function subscriptionId(endpoint) {
+  const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(endpoint));
+  return [...new Uint8Array(bytes)].slice(0, 16).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** Guarda este dispositivo para recibir push. subscription: PushSubscription del navegador. */
+export async function savePushSubscription(uid, subscription) {
+  const { endpoint, keys } = subscription.toJSON();
+  await setDoc(doc(db, 'users', uid, 'pushSubscriptions', await subscriptionId(endpoint)), {
+    endpoint, keys: { p256dh: keys.p256dh, auth: keys.auth }, userAgent: navigator.userAgent.slice(0, 200), createdAt: serverTimestamp(),
+  });
+}
+
+export async function removePushSubscription(uid, endpoint) {
+  await deleteDoc(doc(db, 'users', uid, 'pushSubscriptions', await subscriptionId(endpoint)));
+}
+
+/** Escucha el documento del usuario (favoriteTeam, notify, follows). Devuelve la función para dejar de escuchar. */
+export function watchUserDoc(uid, cb) {
+  return onSnapshot(doc(db, 'users', uid), (snap) => cb(snap.data() ?? null), () => cb(null));
+}
+
+/** Escucha la bandeja de avisos (los 50 más recientes). */
+export function watchInbox(uid, cb) {
+  const q = query(collection(db, 'users', uid, 'notifications'), orderBy('createdAt', 'desc'), limit(50));
+  return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))), () => cb([]));
+}
+
+export function markRead(uid, notificationId) {
+  return updateDoc(doc(db, 'users', uid, 'notifications', notificationId), { read: true });
 }

@@ -1,0 +1,22 @@
+# Dispara los avisos automáticos (goles, rojas, inicio, final y noticias de "mi equipo") cada 5 minutos.
+# GitHub puede retrasar las ejecuciones programadas unos minutos en horas de mucho uso.
+# Secretos del repo (Settings → Secrets and variables → Actions): APP_URL (https://tu-app.vercel.app) y CRON_SECRET.
+name: Avisos automáticos
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch: {} # para probarlo a mano desde la pestaña Actions
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Llamar a /api/cron/notify
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then echo "Faltan los secretos APP_URL o CRON_SECRET"; exit 0; fi
+          curl --fail-with-body -sS -m 120 -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/notify"

@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { getPushState, subscribeToPush, unsubscribeFromPush, getCurrentSubscription, sendTestPush } from '@/lib/push';
+import { useUserDoc } from '@/lib/firebase/useUserDoc';
+import { savePushSubscription, removePushSubscription, saveNotifyPrefs } from '@/lib/firebase/db';
 
 const PREFS = [
   { id: 'goals', label: 'Goles', hint: 'De los partidos y equipos que sigues' },
@@ -19,7 +21,8 @@ const PREFS = [
   { id: 'teamNews', label: 'Noticias de mi equipo', hint: 'Notas nuevas que mencionan a tu equipo' },
 ];
 const DEFAULTS = { goals: true, kickoff: true, final: true, redCards: false, reminders: true, teamNews: true };
-// shortcut: preferencias en localStorage hasta tener login; luego van en users/{uid}.notify.
+// Sin sesión las preferencias quedan en el dispositivo (localStorage); con sesión van en users/{uid}.notify,
+// que es lo que lee el servidor para decidir qué push enviar.
 const KEY = 'futbolapp:notify';
 
 const MESSAGES = {
@@ -29,7 +32,7 @@ const MESSAGES = {
   denied: 'Bloqueaste las notificaciones. Actívalas en los ajustes del navegador para este sitio.',
 };
 
-function PushCard() {
+function PushCard({ uid }) {
   const [state, setState] = useState('loading');
   const [subscription, setSubscription] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -43,6 +46,11 @@ function PushCard() {
     if (s === 'granted') getCurrentSubscription().then(setSubscription);
   }, []);
 
+  // Con sesión, el dispositivo suscrito se guarda en la cuenta (también si se suscribió antes de entrar).
+  useEffect(() => {
+    if (uid && subscription) savePushSubscription(uid, subscription).catch((e) => console.warn('No se guardó el dispositivo', e.code ?? e));
+  }, [uid, subscription]);
+
   async function run(action, ok) {
     setBusy(true); setMsg('');
     try { await action(); setMsg(ok); }
@@ -51,7 +59,10 @@ function PushCard() {
   }
 
   const enable = () => run(async () => setSubscription(await subscribeToPush()), 'Listo: te avisaremos en este dispositivo.');
-  const disable = () => run(async () => { await unsubscribeFromPush(); setSubscription(null); }, 'Desactivadas en este dispositivo.');
+  const disable = () => run(async () => {
+    if (uid && subscription) await removePushSubscription(uid, subscription.endpoint).catch(() => {});
+    await unsubscribeFromPush(); setSubscription(null);
+  }, 'Desactivadas en este dispositivo.');
   const test = () => run(() => sendTestPush(subscription), 'Enviamos una notificación de prueba.');
 
   return (
@@ -82,6 +93,13 @@ function PushCard() {
 
 export function NotificationSettings() {
   const [prefs, setPrefs] = useState(DEFAULTS);
+  const { user, profile } = useUserDoc();
+
+  // Con sesión, mandan las preferencias guardadas en la cuenta.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- se sincroniza con Firestore al llegar el documento
+    if (profile?.notify) setPrefs({ ...DEFAULTS, ...profile.notify });
+  }, [profile]);
 
   useEffect(() => {
     try {
@@ -95,11 +113,17 @@ export function NotificationSettings() {
     const next = { ...prefs, [id]: value };
     setPrefs(next);
     try { localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* modo privado */ }
+    if (user) saveNotifyPrefs(user.uid, next).catch((e) => console.warn('No se guardaron las preferencias', e.code ?? e));
   }
 
   return (
     <div className="flex flex-col gap-4">
-      <PushCard />
+      <PushCard uid={user?.uid} />
+      {user && !profile?.favoriteTeam && profile !== undefined && (
+        <p className="rounded-2xl bg-secondary p-4 text-md text-muted-foreground">
+          Para recibir avisos de goles y noticias, abre la página de tu equipo y toca <b className="text-foreground">Hacer mi equipo</b>.
+        </p>
+      )}
       <div className="flex flex-col rounded-3xl bg-card px-5">
         {PREFS.map((p) => (
           <div key={p.id} className="flex items-center justify-between gap-4 border-b py-4 last:border-b-0">
