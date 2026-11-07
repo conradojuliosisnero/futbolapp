@@ -62,3 +62,29 @@ export function eventToMoment(ev, match, timeline = scoreTimeline(match.events ?
 
 /** Momento de final de partido. */
 export const fullTimeMoment = (match) => ({ type: 'fullTime', data: { home: match.home.name, away: match.away.name, score: match.score ?? [0, 0] } });
+
+const FINAL_KEY = '__final__';
+
+/**
+ * Qué animar ahora: los eventos del partido que aún no se vieron, en orden cronológico,
+ * y el final si el partido terminó y no se mostró. Devuelve { moments, keys } (keys = todo lo ya visto + lo nuevo).
+ * seen: Set de claves ya animadas (por ejemplo, en esta sesión).
+ */
+export function pendingMoments(match, seen = new Set()) {
+  const events = match?.events ?? [];
+  const timeline = scoreTimeline(events);
+  const keys = new Set(seen);
+  const moments = [];
+  for (const e of [...events].reverse()) { // events viene del más reciente al más antiguo
+    const k = eventKey(e);
+    if (keys.has(k)) continue;
+    keys.add(k);
+    const m = eventToMoment(e, match, timeline);
+    if (m) moments.push(m);
+  }
+  if (match?.status === 'finished' && !keys.has(FINAL_KEY)) {
+    keys.add(FINAL_KEY);
+    moments.push(fullTimeMoment(match));
+  }
+  return { moments, keys };
+}

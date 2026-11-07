@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { eventToMoment, isLateGoal, scoreTimeline } from './map-event.mjs';
+import { eventToMoment, isLateGoal, scoreTimeline, pendingMoments } from './map-event.mjs';
 
 const match = (events) => ({ home: { name: 'Atl. Nacional', code: 'NAL' }, away: { name: 'Pereira', code: 'PER' }, score: [2, 1], events });
 
@@ -35,4 +35,26 @@ test('roja a quien ya tenía amarilla = doble amarilla; roja directa = roja', ()
 test('cambios e info no se animan', () => {
   assert.equal(eventToMoment({ type: 'sub', min: "60'" }, match([])), null);
   assert.equal(eventToMoment({ type: 'info', min: '' }, match([])), null);
+});
+
+
+
+test('al entrar: todos los eventos animables en orden cronológico, y el final si terminó', () => {
+  const g1 = { min: "10'", type: 'goal', side: 'home', player: 'A' };
+  const y = { min: "20'", type: 'yellow', side: 'away', player: 'B' };
+  const sub = { min: "60'", type: 'sub', side: 'home', title: 'Cambio' };
+  const g2 = { min: "89'", type: 'goal', side: 'away', player: 'C' };
+  const m = { ...match([g2, sub, y, g1]), status: 'finished', score: [1, 1] };
+  const { moments, keys } = pendingMoments(m);
+  assert.deepEqual(moments.map((x) => x.type), ['goal', 'yellow', 'lastMinuteGoal', 'fullTime']);
+  // Volver a entrar en la misma sesión: nada nuevo que mostrar.
+  assert.equal(pendingMoments(m, keys).moments.length, 0);
+});
+
+test('en vivo: solo lo nuevo desde la última vez', () => {
+  const g1 = { min: "10'", type: 'goal', side: 'home', player: 'A' };
+  const first = pendingMoments({ ...match([g1]), status: 'live' });
+  const r = { min: "50'", type: 'red', side: 'away', player: 'Z' };
+  const next = pendingMoments({ ...match([r, g1]), status: 'live' }, first.keys);
+  assert.deepEqual(next.moments.map((x) => x.type), ['red']);
 });

@@ -45,6 +45,11 @@ export function removeFavorite(uid, teamId, { wasMyTeam = false } = {}) {
   return updateDoc(doc(db, 'users', uid), new FieldPath('favorites', String(teamId)), deleteField(), ...extra);
 }
 
+/** Animaciones de los partidos encendidas o apagadas (preferencia de la cuenta). */
+export function saveAnimationsPref(uid, enabled) {
+  return updateDoc(doc(db, 'users', uid), { animations: Boolean(enabled) });
+}
+
 /** Qué avisos quiere el usuario. prefs: { goals, kickoff, final, redCards, reminders, teamNews } */
 export function saveNotifyPrefs(uid, prefs) {
   return updateDoc(doc(db, 'users', uid), { notify: prefs });

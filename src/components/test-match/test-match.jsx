@@ -98,7 +98,7 @@ export function TestMatch() {
 
   return (
     <div className="flex flex-col gap-5">
-      <LiveMoments key={resets} match={match} />
+      <LiveMoments key={resets} match={match} remember={false} />
 
       <div className="flex flex-col gap-1">
         <h1 className="text-[26px] font-black tracking-tight">Partido de prueba</h1>
