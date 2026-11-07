@@ -1,13 +1,17 @@
+'use client';
+
 import { ago } from '@/lib/api/dates';
 import { cn, ENTER, stagger } from '@/lib/utils';
+import { newsRead } from '@/lib/game/client';
 
-/** Tarjeta de noticia: abre la nota completa en ESPN (sitio externo). */
+/** Tarjeta de noticia: abre la nota completa en ESPN (sitio externo). Con sesión, leerla suma puntos. */
 function NewsCard({ item, index, featured }) {
   return (
     <a
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={() => { newsRead(item.url).catch(() => {}); }}
       style={stagger(index)}
       className={cn(ENTER, 'group flex flex-col overflow-hidden rounded-3xl bg-card transition-[background-color,transform] hover:bg-secondary hover:text-inherit active:scale-[0.99]', featured && 'md:col-span-2')}
     >

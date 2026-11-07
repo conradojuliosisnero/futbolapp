@@ -2,6 +2,8 @@ import { fontSans, fontMono } from '@/theme/fonts';
 import { siteConfig } from '@/config/site';
 import { ServiceWorker } from '@/components/pwa/service-worker';
 import { MomentsProvider } from '@/components/moments/moments-provider';
+import { SessionSync } from '@/components/game/session-sync';
+import { Toaster } from '@/components/toast/toaster';
 import '@/styles/globals.css';
 
 // Todas las páginas se generan al visitarlas: así el build/deploy no depende de que las APIs respondan.
@@ -27,6 +29,8 @@ export default function RootLayout({ children }) {
       <body>
         <MomentsProvider>{children}</MomentsProvider>
         <ServiceWorker />
+        <SessionSync />
+        <Toaster />
       </body>
     </html>
   );

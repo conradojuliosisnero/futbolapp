@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMoments } from './moments-provider';
 import { pendingMoments } from '@/lib/moments/map-event.mjs';
+import { toast } from '@/lib/toast';
 
 /**
  * Animaciones del partido:
- *  - Al entrar: los eventos que ya pasaron (goles, tarjetas, VAR) en cadena, uno por uno, en orden; y el final si terminó.
+ *  - Al entrar a un partido terminado: los eventos (goles, tarjetas, VAR) en cadena, uno por uno, en orden; y el final.
+ *  - Al entrar a un partido en vivo: lo que ya pasó NO se anima (parecería que acaba de pasar); un toast con el marcador.
  *  - En vivo: cada evento nuevo al llegar (la página se actualiza sola).
  *  - Lo ya visto en esta sesión no se repite al volver al partido (remember).
  *  - Si el usuario apagó las animaciones en su perfil, no se muestra nada.
@@ -23,6 +25,13 @@ export function LiveMoments({ match, remember = true }) {
       let stored = [];
       if (remember) { try { stored = JSON.parse(sessionStorage.getItem(storeKey) || '[]'); } catch { /* sin almacenamiento */ } }
       seen.current = new Set(stored);
+      // Primera vez en este partido y ya va en vivo: lo anterior cuenta como visto.
+      if (match.status === 'live' && !stored.length) {
+        seen.current = pendingMoments({ ...match, status: 'live' }).keys;
+        if (match.score) {
+          toast({ id: `now-${match.id}`, icon: '⏱️', title: `${match.home.name} ${match.score[0]}-${match.score[1]} ${match.away.name}`, text: 'Partido en vivo. Te avisamos de lo que pase desde ahora.', min: match.minute ?? undefined });
+        }
+      }
     }
     const { moments, keys } = pendingMoments(match, seen.current);
     seen.current = keys;

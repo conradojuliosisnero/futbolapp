@@ -5,10 +5,11 @@ import { FreshData } from '@/components/layout/fresh-data';
 import { AutoRefresh } from '@/components/layout/auto-refresh';
 import { MatchClock } from '@/components/match/match-clock';
 import { LiveMoments } from '@/components/moments/live-moments';
+import { PlayToasts } from '@/components/moments/play-toasts';
 import { SoundToggle } from '@/components/moments/sound-toggle';
 import { CreateRoomButton } from '@/components/rooms/create-room-button';
 import { Scoreboard } from '@/components/match/scoreboard';
-import { PredictionBar } from '@/components/match/prediction-bar';
+import { MatchVote } from '@/components/match/match-vote';
 import { MatchTabs } from '@/components/match/match-tabs';
 import { getMatch, getLiveCount, getDataTime } from '@/lib/api/matches';
 import { siteConfig } from '@/config/site';
@@ -32,6 +33,7 @@ export default async function MatchPage({ params }) {
       <AutoRefresh enabled={match.status === 'live'} />
       <div className="flex flex-col gap-5">
         <LiveMoments match={match} />
+        <PlayToasts match={match} />
         <div className="flex items-center justify-between gap-3">
           <Link href={`/ligas/${match.leagueId}`} className="text-sm font-medium text-subtle">← {match.league}{match.round && ` · ${match.round}`}</Link>
           <span className="flex items-center gap-2">
@@ -41,7 +43,7 @@ export default async function MatchPage({ params }) {
         </div>
         <MatchClock match={match} />
         <Scoreboard match={match} />
-        {match.prediction && <PredictionBar match={match} />}
+        <MatchVote match={{ id: match.id, status: match.status, utc: match.utc, home: match.home, away: match.away }} />
       </div>
     </AppShell>
   );

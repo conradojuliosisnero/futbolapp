@@ -146,7 +146,11 @@ export async function matchDetails(slug, eventId, status) {
     return [];
   }).reverse();
 
-  const commentary = (sum.commentary ?? []).filter((c) => c.text).map((c) => ({ min: c.time?.displayValue ?? '', text: c.text })).reverse();
+  // kind: tipo de jugada de ESPN (foul, offside, corner-awarded, shot-on-target, substitution…): lo usan los avisos del relato.
+  const commentary = (sum.commentary ?? []).filter((c) => c.text).map((c) => ({
+    id: c.play?.id ?? `${c.sequence}`, min: c.time?.displayValue ?? '', text: c.text,
+    kind: c.play?.type?.type ?? null, team: c.play?.team?.displayName ?? null,
+  })).reverse();
 
   const box = sum.boxscore?.teams ?? [];
   const h = box.find((t) => t.homeAway === 'home'), a = box.find((t) => t.homeAway === 'away');

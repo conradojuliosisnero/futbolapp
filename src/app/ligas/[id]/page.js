@@ -9,6 +9,7 @@ import { MatchRow } from '@/components/match/match-list';
 import { getLeague, getLiveCount, getDataTime } from '@/lib/api/matches';
 import { DEFAULT_TEAM } from '@/config/leagues';
 import { siteConfig } from '@/config/site';
+import { FollowLeagueButton } from '@/components/league/follow-league-button';
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
@@ -48,6 +49,7 @@ export default async function LeaguePage({ params }) {
             <h1 className="text-[26px] leading-none font-black tracking-tight">{league.name}</h1>
             <span className="text-md text-muted-foreground">{[league.country, league.season && `Temporada ${league.season}`, league.round].filter(Boolean).join(' · ')}</span>
           </div>
+          <FollowLeagueButton league={{ code: league.code, name: league.name, emblem: league.emblem }} className="ml-auto" />
         </header>
         <SectionTabs
           label="Secciones de la liga"

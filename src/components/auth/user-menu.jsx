@@ -12,6 +12,8 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { useUser } from '@/lib/firebase/useUser';
+import { useIsAdmin } from '@/lib/firebase/useIsAdmin';
+import { LayoutDashboard, Medal } from 'lucide-react';
 import { signOut } from '@/lib/firebase/auth';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +33,7 @@ function Avatar({ user, size = 44 }) {
 /** Menú rápido de la cuenta: ver perfil, accesos y cerrar sesión (o entrar si no hay sesión). */
 export function UserMenu({ variant = 'icon', side = 'bottom', align = 'end' }) {
   const user = useUser(); // undefined = cargando
+  const isAdmin = useIsAdmin();
   const router = useRouter();
   const item = 'gap-2.5 rounded-lg px-2.5 py-2 text-sm font-semibold';
 
@@ -74,6 +77,10 @@ export function UserMenu({ variant = 'icon', side = 'bottom', align = 'end' }) {
             <DropdownMenuItem asChild className={item}><Link href="/favoritos"><Star /> Favoritos</Link></DropdownMenuItem>
             <DropdownMenuItem asChild className={item}><Link href="/mi-equipo"><Star /> Mi equipo</Link></DropdownMenuItem>
             <DropdownMenuItem asChild className={item}><Link href="/notificaciones"><Bell /> Notificaciones</Link></DropdownMenuItem>
+            <DropdownMenuItem asChild className={item}><Link href="/ranking"><Medal /> Ranking</Link></DropdownMenuItem>
+            {isAdmin && (
+              <DropdownMenuItem asChild className={item}><Link href="/admin"><LayoutDashboard /> Panel de admin</Link></DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onSelect={logout} className={item}><LogOut /> Cerrar sesión</DropdownMenuItem>
           </>

@@ -63,7 +63,7 @@ Las consultas se hacen en el servidor y su caché la comparten todos los usuario
 
 Sin librerías extra a propósito: los datos de la API se piden con `fetch` nativo desde el servidor
 (route handlers / server components) usando la caché de Next (`revalidate`), así la API key nunca llega al navegador.
-Rutas: `/` (Inicio), `/favoritos`, `/partido/[id]/sala/[sala]`, `/partidos`, `/partido/[id]`, `/ligas`, `/ligas/[id]`, `/equipo/[id]`, `/jugador/[id]`, `/mi-equipo`, `/noticias`, `/buscar`, `/notificaciones`, `/perfil`, `/entrar` y `/prueba` (solo desarrollo).
+Rutas: `/` (Inicio), `/ranking`, `/admin` (solo admin), `/favoritos`, `/partido/[id]/sala/[sala]`, `/partidos`, `/partido/[id]`, `/ligas`, `/ligas/[id]`, `/equipo/[id]`, `/jugador/[id]`, `/mi-equipo`, `/noticias`, `/buscar`, `/notificaciones`, `/perfil`, `/entrar` y `/prueba` (solo desarrollo).
 Pantallas de estado: `app/loading.js` (skeleton), `app/error.js`, `app/global-error.js` y `app/not-found.js` (404).
 
 ## Estructura
@@ -160,7 +160,36 @@ tienen sonido (botón para silenciar) y se saltan con un toque.
 
 - `src/lib/moments/engine.js` — motor (sin React) · `map-event.mjs` — eventos de la app → momentos (probado).
 - `<MomentsProvider>` en `app/layout.js` · `<LiveMoments match={match} />` en la página del partido: anima cada evento **nuevo** que llega.
+  Al entrar a un partido **en vivo**, lo que ya pasó no se anima (sale un toast con el marcador); en uno terminado sí se repasa todo.
+- **Jugadas del relato como toast** (`<PlayToasts>`, lógica en `play-toasts.mjs`): faltas, fueras de lugar, córners, tiros a puerta,
+  mano, penales, cambios y juego detenido, mientras miras un partido en vivo. Vienen del tipo de jugada del relato de ESPN.
 - Pruébalas en `/prueba`: panel con cada animación (pantalla completa o banner) y el partido simulado que las dispara.
+
+## Ligas que sigues
+
+En `/ligas` (o en la página de cada liga) toca **Seguir**. En Inicio y Partidos solo salen los partidos de las ligas que sigues;
+si no sigues ninguna, se ven todas. Se guarda en `users/{uid}.follows.leagues`.
+
+## Puntos, racha y ranking
+
+Los da **solo el servidor** (rutas `/api/game/*` con firebase-admin), así no se pueden falsear desde el navegador. Valores en `src/lib/game/rules.mjs` (probado):
+
+| Acción | Puntos |
+|---|---|
+| Entrar al app (1 vez por día, hora de Colombia) | +10 · racha +1 (se pierde si pasa un día sin entrar) |
+| 7 días seguidos | +50 de bono |
+| Leer una noticia | +3 (máx. 5 noticias al día) |
+| Votar quién gana (hasta que empiece el partido) | +5 |
+| Acertar el ganador | +20 (lo da la tarea programada al terminar el partido) |
+
+Racha y puntos en la cabecera (llama) y en `/ranking` (top 50). Requiere `FIREBASE_SERVICE_ACCOUNT` y el índice de `firestore.indexes.json`.
+
+## Panel de admin (`/admin`)
+
+Solo para la cuenta de `ADMIN_EMAIL` (correo verificado); cualquier otra ve 404. Muestra los usuarios (alta, última vez, puntos)
+y las **peticiones al servidor por día** de cada uno (páginas, navegación y `/api`, sin estáticos ni precargas), de los últimos 14 días.
+El conteo lo hace `src/proxy.js` (una escritura en Firestore por petición, en `usage/{día}`); el servidor sabe quién pide por la cookie
+`m90_token` (token de Firebase que la app renueva sola). Requiere `FIREBASE_SERVICE_ACCOUNT` y `ADMIN_EMAIL` en Vercel.
 
 ## Partido de prueba (animaciones)
 
@@ -175,7 +204,8 @@ En producción da 404 salvo que definas `ENABLE_TEST_MATCH=1`. Motor y pruebas: 
 1. En [vercel.com](https://vercel.com) → **Add New → Project** → importa el repo `futbolapp`. Detecta Next.js solo.
 2. En **Environment Variables** agrega las mismas variables de tu `.env` y `.env.local`:
    `API_FOTBALL_API_KEY`, `API_FOTBALL_API_HOST`, `API_DATA_API_KEY`, `API_DATA_API_HEADER`,
-   las 7 `NEXT_PUBLIC_FIREBASE_*`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`.
+   las 7 `NEXT_PUBLIC_FIREBASE_*`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`,
+   `FIREBASE_SERVICE_ACCOUNT`, `CRON_SECRET` y `ADMIN_EMAIL`.
    (Opcional: `ENABLE_TEST_MATCH=1` para abrir `/prueba` en producción.)
 3. **Deploy**. Cada `git push` a `main` vuelve a desplegar.
 4. En Firebase → **Authentication → Configuración → Dominios autorizados**, agrega tu dominio de Vercel (`tu-app.vercel.app`); si no, el login con Google falla.

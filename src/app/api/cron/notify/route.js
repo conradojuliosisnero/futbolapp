@@ -3,10 +3,11 @@ import { adminDb } from '@/lib/firebase/admin';
 import { matchNotifications, newsNotifications, groupUsersByTeam, usersForMatch } from '@/lib/notify/engine.mjs';
 import { deliver } from '@/lib/notify/send';
 import { getMatchesByStatus, getMatch, getTeamNews } from '@/lib/api/matches';
+import { settlePredictions } from '@/lib/game/settle';
 
 // Tarea programada (cada ~5 min desde GitHub Actions, ver .github/workflows/notify.yml):
 // detecta goles, rojas, inicio y final de los partidos de los equipos favoritos de cada usuario (y "mi equipo"),
-// y noticias nuevas de esos equipos.
+// y noticias nuevas de esos equipos. También da el bono de puntos a quien acertó el ganador.
 // Lo ya avisado se guarda en Firestore (notifyState/*) para no repetir.
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -27,7 +28,10 @@ export async function GET(request) {
   // shortcut: lee todos los usuarios en cada corrida; con muchos miles, guardar un índice equipo → usuarios.
   const snap = await db.collection('users').get();
   const byTeam = groupUsersByTeam(snap.docs.map((d) => ({ uid: d.id, ...d.data() })));
-  const summary = { users: snap.size, teams: byTeam.size, matches: 0, news: 0, pushes: 0 };
+  const summary = { users: snap.size, teams: byTeam.size, matches: 0, news: 0, pushes: 0, correctPicks: 0 };
+
+  // 0) Bono a los que acertaron quién ganaba (partidos ya terminados).
+  summary.correctPicks = await settlePredictions(db).catch((e) => { console.warn('settlePredictions', e.message); return 0; });
   if (!byTeam.size) return Response.json(summary);
 
   const stateRef = (id) => db.collection('notifyState').doc(id.replace(/\//g, '_'));

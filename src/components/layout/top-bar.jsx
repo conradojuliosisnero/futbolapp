@@ -4,11 +4,15 @@ import { useState } from 'react';
 import { SearchBox } from '@/components/search/search-box';
 import { HOME_FILTERS } from '@/config/navigation';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useHomeFilter } from '@/components/home/home-filter';
 
 export function TopBar({ liveCount, defaultFilter = 'live', onFilterChange }) {
-  const [filter, setFilter] = useState(defaultFilter);
+  // Dentro de HomeFilterProvider el filtro es compartido con la lista del inicio (HomeMatches).
+  const shared = useHomeFilter();
+  const [own, setOwn] = useState(defaultFilter);
+  const filter = shared?.filter ?? own;
   // Radix devuelve '' al desmarcar el activo: mantenemos siempre uno seleccionado.
-  const select = (id) => { if (!id) return; setFilter(id); onFilterChange?.(id); };
+  const select = (id) => { if (!id) return; (shared?.setFilter ?? setOwn)(id); onFilterChange?.(id); };
 
   return (
     <header className="mb-4 flex flex-col gap-4 md:mb-6 md:flex-row md:items-center md:justify-between">

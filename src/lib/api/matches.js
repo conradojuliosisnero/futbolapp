@@ -267,6 +267,17 @@ export async function getTodayByLeague() {
   return groupByLeague((await windowMatches()).filter((m) => dayKey(m.utc) === today));
 }
 
+/** Listas del inicio: en vivo, hoy y mañana, agrupadas por liga. */
+export async function getHomeLists() {
+  const all = await windowMatches();
+  const today = dayKey(Date.now()), tomorrow = dayKey(Date.now() + DAY);
+  return {
+    live: groupByLeague(all.filter((m) => m.status === 'live')),
+    today: groupByLeague(all.filter((m) => dayKey(m.utc) === today)),
+    tomorrow: groupByLeague(all.filter((m) => dayKey(m.utc) === tomorrow)),
+  };
+}
+
 
 /** { live, scheduled, finished } agrupados por liga. */
 export async function getMatchesByStatus() {

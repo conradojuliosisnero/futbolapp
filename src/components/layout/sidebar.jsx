@@ -6,6 +6,7 @@ import { InstallCard } from '@/components/pwa/install-card';
 import { AnimatedLink } from '@/components/ui/animated-link';
 import { UserMenu } from '@/components/auth/user-menu';
 import { FavoritesNav } from '@/components/favorites/favorites-list';
+import { StreakBadge } from '@/components/game/streak-badge';
 import { cn } from '@/lib/utils';
 
 export function Sidebar({ active, counts = {} }) {
@@ -46,7 +47,8 @@ export function Sidebar({ active, counts = {} }) {
       <FavoritesNav />
 
       <div className="mt-auto hidden xl:flex"><InstallCard /></div>
-      <div className="mt-auto w-full xl:mt-0"><UserMenu variant="full" side="right" align="end" /></div>
+      <div className="mt-auto flex justify-center xl:mt-0 xl:justify-start"><StreakBadge full /></div>
+      <div className="w-full"><UserMenu variant="full" side="right" align="end" /></div>
     </nav>
   );
 }

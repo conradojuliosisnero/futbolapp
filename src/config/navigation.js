@@ -4,7 +4,7 @@ import { CalendarDays } from '@/components/animate-ui/icons/calendar-days';
 import { Trophy } from '@/components/animate-ui/icons/trophy';
 import { Star } from '@/components/animate-ui/icons/star';
 import { Bell } from '@/components/animate-ui/icons/bell';
-import { Newspaper } from 'lucide-react';
+import { Newspaper, Medal } from 'lucide-react';
 
 // Iconos animados de Animate UI: se mueven al pasar el cursor/tocar el ítem y al llegar a la sección.
 
@@ -16,6 +16,7 @@ export const NAV_ITEMS = [
   { id: 'ligas', label: 'Ligas', href: '/ligas', icon: Trophy, mobile: true },
   { id: 'mi-equipo', label: 'Mi equipo', href: '/mi-equipo', icon: Star, mobile: true },
   { id: 'noticias', label: 'Noticias', href: '/noticias', icon: Newspaper, mobile: true },
+  { id: 'ranking', label: 'Ranking', href: '/ranking', icon: Medal },
   { id: 'notificaciones', label: 'Notificaciones', href: '/notificaciones', icon: Bell },
 ];
 

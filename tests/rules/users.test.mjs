@@ -2,7 +2,7 @@
 import { test, before, after, beforeEach } from 'node:test';
 import { readFileSync } from 'node:fs';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, setDoc, updateDoc, deleteField, serverTimestamp, FieldPath } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteField, serverTimestamp, FieldPath } from 'firebase/firestore';
 
 let env;
 before(async () => {
@@ -46,4 +46,19 @@ test('favoritos: no en el documento de otro usuario, ni más de 50', async () =>
 
 test('sin documento de usuario, actualizar falla (por eso la app lo crea si falta)', async () => {
   await assertFails(updateDoc(doc(db('ana'), 'users', 'ana'), new FieldPath('favorites', '86'), { name: 'Real Madrid' }));
+});
+
+test('ligas: seguir y dejar de seguir (código con punto)', async () => {
+  await newUser('ana');
+  const ref = doc(db('ana'), 'users', 'ana');
+  await assertSucceeds(updateDoc(ref, new FieldPath('follows', 'leagues', 'col.1'), { name: 'Liga BetPlay', crest: null }));
+  await assertSucceeds(updateDoc(ref, new FieldPath('follows', 'leagues', 'col.1'), deleteField()));
+});
+
+test('puntos: la app no puede escribir su juego, el ranking ni los votos (solo el servidor)', async () => {
+  await newUser('ana');
+  await assertFails(updateDoc(doc(db('ana'), 'users', 'ana'), { game: { points: 99999 } }));
+  await assertFails(setDoc(doc(db('ana'), 'leaderboard', 'ana'), { name: 'Ana', points: 99999 }));
+  await assertFails(setDoc(doc(db('ana'), 'predictions', 'PL-1', 'votes', 'ana'), { pick: 'home', at: serverTimestamp() }));
+  await assertSucceeds(getDoc(doc(db('ana'), 'leaderboard', 'beto')));
 });

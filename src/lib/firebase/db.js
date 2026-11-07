@@ -6,10 +6,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './client';
 
-// Un voto por usuario y partido (el id del doc es el uid, así no se puede votar dos veces).
-export function vote(uid, matchId, pick) {
-  return setDoc(doc(db, 'predictions', String(matchId), 'votes', uid), { pick, at: serverTimestamp() });
-}
+// Los votos los guarda el servidor (/api/game/vote): así se cierra al empezar el partido y suma puntos.
 
 // Conteo con agregación del servidor: sin contadores que un cliente pueda falsear.
 // shortcut: 3 count queries por partido (1 lectura por cada 1000 votos), si hay mucho tráfico cachear en el servidor.
@@ -87,4 +84,14 @@ export function watchInbox(uid, cb) {
 
 export function markRead(uid, notificationId) {
   return updateDoc(doc(db, 'users', uid, 'notifications', notificationId), { read: true });
+}
+
+// ---------- ligas que sigue ----------
+
+/** Seguir o dejar de seguir una liga (los partidos se filtran a las ligas seguidas). league: { code, name, emblem } */
+export function setLeagueFollow(uid, league, on) {
+  // FieldPath: códigos como "col.1" llevan punto.
+  return updateDoc(doc(db, 'users', uid), new FieldPath('follows', 'leagues', league.code), on
+    ? { name: league.name, crest: league.emblem ?? null }
+    : deleteField());
 }

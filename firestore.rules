@@ -11,9 +11,10 @@ rules_version = '2';
 //   favorites: { [teamId]: { name, crest, league, addedAt } }   equipos favoritos (máx. 50); de ellos llegan los avisos
 //   notify: { goals, kickoff, final, redCards, reminders, teamNews: bool }   qué avisos quiere
 //   animations: bool                     animaciones de los partidos (por defecto true)
+//   game: { points, streak, best, last, day, today, news }   puntos y racha (SOLO el servidor lo escribe)
 //   follows: {
 //     teams:   { [apiTeamId]:   { name, crest } },
-//     leagues: { [apiLeagueId]: { name, crest } },
+//     leagues: { [código de liga, ej. 'PL' o 'col.1']: { name, crest } },   ligas que sigue (filtran los partidos)
 //     matches: { [apiMatchId]:  { name, crest } },
 //   }
 //
@@ -38,9 +39,14 @@ rules_version = '2';
 // rooms/{roomId}/messages/{msgId}      chat de la sala
 //   uid, name, photo · text (1–200) · createdAt
 //
-// predictions/{matchId}/votes/{uid}    un voto por usuario y partido
+// predictions/{matchId}                { matchId, utc, settled, result }  (solo servidor: bono a quien acierta)
+// predictions/{matchId}/votes/{uid}    un voto por usuario y partido (lo escribe el servidor: /api/game/vote)
 //   pick: 'home' | 'draw' | 'away'
 //   at: timestamp
+//
+// leaderboard/{uid}                    ranking público { name, photo, points, streak, best, last } (solo servidor)
+// gameLog/{uid}_{clave}                lo ya premiado (noticia, voto, acierto). Solo servidor.
+// usage/{día}, usage/{día}/users/{uid} peticiones por día para /admin. Solo servidor.
 //
 // Partidos, ligas, equipos y estadísticas NO se guardan aquí: vienen de la API de fútbol (caché de Next).
 // Las contraseñas NO se guardan aquí: las maneja Firebase Auth.
@@ -83,13 +89,15 @@ service cloud.firestore {
 
     match /predictions/{matchId}/votes/{uid} {
       // Lectura pública para que cualquiera vea los porcentajes (count queries).
+      // Se vota desde /api/game/vote (firebase-admin): ahí se cierra al empezar el partido y se dan los puntos.
       allow read: if true;
-      // shortcut: no se valida que el partido no haya empezado (el partido vive en la API, no aquí); cuando importe, votar desde un route handler con firebase-admin.
-      allow create, update: if isOwner(uid)
-        && request.resource.data.keys().hasOnly(['pick', 'at'])
-        && request.resource.data.pick in ['home', 'draw', 'away']
-        && request.resource.data.at == request.time;
-      allow delete: if isOwner(uid);
+      allow write: if false;
+    }
+
+    // Ranking público. Lo escribe solo el servidor (los puntos no se pueden falsear desde la app).
+    match /leaderboard/{uid} {
+      allow read: if true;
+      allow write: if false;
     }
 
     // ---------- Salas de partido ----------

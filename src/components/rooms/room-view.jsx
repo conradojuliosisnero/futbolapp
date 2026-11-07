@@ -17,11 +17,18 @@ import { cn, ENTER } from '@/lib/utils';
 
 const hhmm = (ts) => (ts?.toDate ? ts.toDate().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', hour12: false }) : '');
 
+// Color fijo por persona (según su nombre) para distinguir quién escribe.
+const AVATAR_COLORS = ['bg-primary text-primary-foreground', 'bg-sky-500 text-white', 'bg-orange-500 text-white', 'bg-fuchsia-500 text-white', 'bg-emerald-500 text-white', 'bg-amber-400 text-black'];
+const colorOf = (name) => AVATAR_COLORS[[...name].reduce((n, c) => n + c.charCodeAt(0), 0) % AVATAR_COLORS.length];
+
+/** Inicial del nombre (no se carga la foto: más rápido y sin pedir imágenes a Google en cada mensaje). */
 function Avatar({ person, size = 28 }) {
-  const style = { width: size, height: size };
-  // eslint-disable-next-line @next/next/no-img-element -- foto de perfil externa
-  if (person?.photo) return <img src={person.photo} alt="" referrerPolicy="no-referrer" className="flex-none rounded-full object-cover" style={style} />;
-  return <span className="grid flex-none place-items-center rounded-full bg-accent text-xs font-black" style={style}>{(person?.name ?? '?')[0].toUpperCase()}</span>;
+  const name = person?.name?.trim() || '?';
+  return (
+    <span className={cn('grid flex-none place-items-center rounded-full text-xs font-black', colorOf(name))} style={{ width: size, height: size }}>
+      {name[0].toUpperCase()}
+    </span>
+  );
 }
 
 /** Segundos que faltan para poder volver a escribir (mismo límite que aplican las reglas). */

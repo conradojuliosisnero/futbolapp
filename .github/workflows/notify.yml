@@ -19,4 +19,8 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then echo "Faltan los secretos APP_URL o CRON_SECRET"; exit 0; fi
-          curl --fail-with-body -sS -m 120 -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/cron/notify"
+          URL="${APP_URL%/}/api/cron/notify" # sin "/" doble aunque APP_URL termine en "/"
+          CODE=$(curl -sS -m 120 -o body.txt -w '%{http_code}' -H "Authorization: Bearer $CRON_SECRET" "$URL")
+          cat body.txt; echo
+          # Una redirección (3xx) también es error: APP_URL no es la dirección final de la app (http vs https, otro dominio).
+          if [ "$CODE" != "200" ]; then echo "::error::/api/cron/notify respondió $CODE. Revisa APP_URL (https://, sin / al final, el dominio real) y CRON_SECRET."; exit 1; fi
